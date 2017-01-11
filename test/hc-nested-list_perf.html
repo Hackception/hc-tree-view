@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, minimum-scale=1, initial-scale=1, user-scalable=yes">
+
+    <title>hc-nested-list test</title>
+
+    <script src="../../webcomponentsjs/webcomponents-lite.js"></script>
+    <script src="../../web-component-tester/browser.js"></script>
+
+    <link rel="import" href="utils.html">
+    <link rel="import" href="../hc-nested-list.html">
+  </head>
+  <body>
+    <test-fixture id="basic">
+      <template>
+        <hc-nested-list></hc-nested-list>
+      </template>
+    </test-fixture>
+
+    <script>
+      describe('[perf]hc-nested-list', () => {
+        const frame = 16;
+        let cSize = 100, element, gcSize = 100, items, parts, pSize = 100;
+
+        function getPerformance(fnc, setupFnc, iterations = 50) {
+          // Run the setup function outside the timing
+          if (setupFnc) setupFnc();
+
+          const values = [];
+
+          for (let i = 0; i < iterations; i++) {
+            const start = performance.now();
+            fnc();
+            values.push(performance.now() - start);
+          }
+
+          let max = 0, min = 999;
+          const avg = values.reduce((a, b) => {
+            max = Math.max(b, max);
+            min = Math.min(b, min);
+            return a + b;
+          }, 0) / iterations;
+
+          return {
+            avg: Math.round(avg),
+            max: Math.round(max),
+            min: Math.round(min)
+          };
+        }
+
+        before(() => {
+          element = fixture('basic');
+        });
+        afterEach(() => {
+          items = [];
+          parts = {};
+        });
+
+        describe('with 1mil items', () => {
+          beforeEach(() => items = window.buildItems(pSize, cSize, gcSize, parts));
+
+          it('should build _parts from items in <25 frames with peak <30 frames', () => {
+            const perf = getPerformance(() => element._computeParts(items), null, 25);
+            expect(perf.avg).at.most(25 * frame);
+            expect(perf.max).at.most(30 * frame);
+          });
+          it('should build _items from _parts in <1 frame with no parents open', () =>
+            expect(getPerformance(() => element._computeItems(parts)).avg).at.most(frame));
+          it('should build _items from _parts in <1 frame with all parents open', () => {
+            for (let i = 0; i < pSize; i++) {
+              parts.root[i].open = true;
+            }
+            expect(getPerformance(() => element._computeItems(parts)).avg).at.most(frame);
+          });
+          it('should build _items from _parts in <1 frame with all parents and children open', () => {
+            for (let i = 0; i < pSize; i++) {
+              const parent = parts.root[i];
+              parent.open = true;
+
+              for (let j = 0; j < cSize; j++) {
+                parts[parent.id].open = true;
+              }
+            }
+            expect(getPerformance(() => element._computeItems(parts)).avg).at.most(frame);
+          });
+        });
+        describe('with 100k items', () => {
+          beforeEach(() => {
+            pSize = 10;
+            items = window.buildItems(pSize, cSize, gcSize, parts);
+          });
+
+          it('should build _parts from items in <2 frames with peak <4 frames', () => {
+            const perf = getPerformance(() => element._computeParts(items));
+            expect(perf.avg).at.most(2 * frame);
+            expect(perf.max).at.most(4 * frame);
+          });
+          it('should build _items from _parts in <1 frame with no parents open', () =>
+            expect(getPerformance(() => element._computeItems(parts)).avg).at.most(frame));
+          it('should build _items from _parts in <1 frame with all parents open', () => {
+            for (let i = 0; i < pSize; i++) {
+              parts.root[i].open = true;
+            }
+            expect(getPerformance(() => element._computeItems(parts)).avg).at.most(frame);
+          });
+          it('should build _items from _parts in <1 frame with all parents and children open', () => {
+            for (let i = 0; i < pSize; i++) {
+              const parent = parts.root[i];
+              parent.open = true;
+
+              for (let j = 0; j < cSize; j++) {
+                parts[parent.id].open = true;
+              }
+            }
+            expect(getPerformance(() => element._computeItems(parts)).avg).at.most(frame);
+          });
+        });
+        describe('with 10k items', () => {
+          beforeEach(() => {
+            pSize = 10;
+            cSize = 10;
+            items = window.buildItems(pSize, cSize, gcSize, parts);
+          });
+
+          it('should build _parts from items in <1 frame with peak <1 frame', () => {
+            const perf = getPerformance(() => element._computeParts(items));
+            expect(perf.avg).at.most(frame);
+            expect(perf.max).at.most(frame);
+          });
+          it('should build _items from _parts in <1 frame with no parents open', () =>
+            expect(getPerformance(() => element._computeItems(parts)).avg).at.most(frame));
+          it('should build _items from _parts in <1 frame with all parents open', () => {
+            for (let i = 0; i < pSize; i++) {
+              parts.root[i].open = true;
+            }
+            expect(getPerformance(() => element._computeItems(parts)).avg).at.most(frame);
+          });
+          it('should build _items from _parts in <1 frame with all parents and children open', () => {
+            for (let i = 0; i < pSize; i++) {
+              const parent = parts.root[i];
+              parent.open = true;
+
+              for (let j = 0; j < cSize; j++) {
+                parts[parent.id].open = true;
+              }
+            }
+            expect(getPerformance(() => element._computeItems(parts)).avg).at.most(frame);
+          });
+        });
+        describe('with worst-case flat (10k nodes at one level)', () => {
+          const event = {
+            detail: {
+              item: {}
+            }
+          };
+          let pos;
+
+          beforeEach(() => {
+            pSize = 10000;
+            cSize = 0;
+            gcSize = 0;
+            items = window.buildItems(pSize, cSize, gcSize, parts);
+            // Worst-case item
+            event.detail.item = Object.assign({}, parts.root[parts.root.length]);
+            pos = parts.root.length - 1;
+          });
+
+          it('should build _parts from items in <1 frame with peak <1 frame', () => {
+            const perf = getPerformance(() => element._computeParts(items));
+            expect(perf.avg).at.most(frame);
+            expect(perf.max).at.most(frame);
+          });
+          it('should build _items from _parts in <1 frame with no parents open', () =>
+            expect(getPerformance(() => element._computeItems(parts)).avg).at.most(frame));
+          it('should build _items from _parts in <1 frame with all parents open', () => {
+            for (let i = 0; i < pSize; i++) {
+              parts.root[i].open = true;
+            }
+            expect(getPerformance(() => element._computeItems(parts)).avg).at.most(frame);
+          });
+          // Open/close is handled at a single level in parts, only need to test worst-case
+          it('should close an item in <1 frame', () => {
+            element._parts = parts;
+            expect(getPerformance(() => {
+              element.toggleOpen(event, event.detail);
+            }, () => {
+              element._parts.root[pos].open = true;
+            }).avg).at.most(frame);
+          });
+          it('should open an item in <1 frame', () => {
+            element._parts = parts;
+            expect(getPerformance(() => {
+              element.toggleOpen(event, event.detail);
+            }, () => {
+              element._parts.root[pos].open = false;
+            }).avg).at.most(frame);
+          });
+          it('should open an item with all other items already open in <1 frame', () => {
+            element._parts = parts;
+            expect(getPerformance(() => {
+              element.toggleOpen(event, event.detail);
+            }, () => {
+              for (let i = 0; i < element._parts.length; i++) {
+                element._parts[i].open = i !== pos;
+              }
+            }).avg).at.most(frame);
+          });
+          it('should rebuild _items when an item is opened in <1 frame with peak <1 frame', () => {
+            element._parts = parts;
+            const perf = getPerformance(() => {
+              // Open the item
+              element.toggleOpen(event, event.detail);
+              // Build _items
+              element._computeItems(element._parts);
+            }, () => {
+              element._parts.root[pos].open = false;
+            });
+            expect(perf.avg).at.most(frame);
+            expect(perf.max).at.most(frame);
+          });
+        });
+      });
+    </script>
+  </body>
+</html>
