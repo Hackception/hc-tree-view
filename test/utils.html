@@ -1,0 +1,63 @@
+
+<script>
+  /**
+   * Takes in the number of parent items, child items, and grand child items then builds out
+   *  a flat array of items for testing.  Optionally you can pass in a parts object to get populated
+   *  as the array is built out.
+   *
+   * @param {Number} pSize
+   * @param {Number} cSize
+   * @param {Number} gcSize
+   * @param {Object} parts
+   * @returns {Object[]}
+   */
+  function buildItems(pSize, cSize, gcSize, parts = {}) {
+    const items = [];
+
+    // Add the root items
+    for (let i = 0; i < pSize; i++) {
+      const plabel = `Item ${i}`;
+      const pid = i;
+      if (!parts.root) parts.root = [];
+
+      parts.root.push({
+        label: plabel,
+        id: pid
+      });
+
+      // Add children
+      for (let j = 0; j < cSize; j++) {
+        const clabel = `${plabel} Child ${j}`;
+        const parentId = pid;
+        const cid = `${pid}.${j}`;
+        if (!parts[i]) parts[i] = [];
+
+        parts[parentId].push({
+          label: clabel,
+          id: cid,
+          parentId
+        });
+
+        // Add grand children
+        for (let k = 0; k < gcSize; k++) {
+          const label = `${clabel} GrandChild ${k}`;
+          const parentId = cid;
+          const id = `${cid}.${k}`;
+          if (!parts[parentId]) parts[parentId] = [];
+
+          parts[parentId].push({
+            label,
+            id,
+            parentId
+          });
+        }
+      }
+    }
+    for (const key in parts) {
+      if (parts.hasOwnProperty(key))
+        items.push(...parts[key]);
+    }
+
+    return items;
+  }
+</script>

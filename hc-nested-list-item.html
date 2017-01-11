@@ -1,0 +1,53 @@
+<link rel="import" href="../polymer/polymer.html">
+
+<!--
+`hc-nested-list-item`
+An item element for properly handling toggling open/close state within a `hc-nested-list`.
+This element blocks all click events so changing selected status will need to be handled manually within.
+
+@demo demo/hc-nested-list.html
+-->
+
+<dom-module id="hc-nested-list-item">
+  <template>
+    <style>
+    </style>
+
+    <slot></slot>
+  </template>
+  <script>
+    Polymer({
+      is: 'hc-nested-list-item',
+      properties: {
+        item: {
+          type: Object,
+          notify: true
+        }
+      },
+      listeners: {
+        click: 'fireOpenEvent'
+      },
+      /**
+       * Fires the toggle event required by hc-nested-list to open/close content sections.
+       *
+       * @fires hc-nested-list#toggle
+       * @param {ClickEvent} event
+       */
+      fireOpenEvent(event) {
+        // Prevent this from changing selected state in iron-list.
+        event.stopPropagation();
+
+        // Trigger an event to toggle open state instead.
+        const self = this;
+        this.fire('toggle', {
+          item: this.item,
+          // Templates don't actually update when the outside data updates, this allows us to reflect open
+          //  changes back into our local template so we can style and such.
+          cb(item) {
+            self.set('item', Object.assign({}, item));
+          }
+        });
+      }
+    });
+  </script>
+</dom-module>

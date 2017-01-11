@@ -1,0 +1,208 @@
+<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="../iron-list/iron-list.html">
+<link rel="import" href="../paper-checkbox/paper-checkbox.html">
+<link rel="import" href="../iron-icon/iron-icon.html">
+<link rel="import" href="../iron-icons/iron-icons.html">
+
+<!--
+`hc-nested-list`
+An optimized tree-view based on a flat data structure.
+
+`hc-nested-list-loader`
+
+@demo demo/hc-nested-list.html
+-->
+
+<dom-module id="hc-nested-list">
+  <template>
+    <style>
+      :host {
+        display: block;
+      }
+      #loader {
+        position: absolute;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        right: 0;
+        z-index: 999;
+
+        @apply --hc-nested-list-loader;
+      }
+    </style>
+
+    <iron-list
+      id="list"
+      items="[[_items]]"
+      max-physical-count="[[_items.length]]"
+      as="item"
+      multi-selection="[[multiSelection]]"
+      selected-item="{{selectedItem}}"
+      selected-items="{{selectedItems}}"
+      selection-enabled="[[selectionEnabled]]"
+      >
+      <div id="loader" hidden$="[[!isLoading]]">
+        <slot name="loader"></slot>
+      </div>
+      <slot></slot>
+    </iron-list>
+  </template>
+
+  <script>
+    Polymer({
+      is: 'hc-nested-list',
+      properties: {
+        /* Enables multi-selection of items; inherited from iron-list */
+        multiSelection: Boolean,
+        /* Used when multiSelection is false to show the item that is selected; inherited from iron-list */
+        selectedItem: {
+          type: Object,
+          notify: true
+        },
+        /* Used when multiSelection is true to show all selected items; inherited from iron-list */
+        selectedItems: {
+          type: Array,
+          notify: true
+        },
+        /* Enables selection of items; inherited from iron-list */
+        selectionEnabled: Boolean,
+        /* The flat array of items to build the nested list structure from */
+        items: Array,
+        /* Notifies if the element is in the process of loading, mainly used for lazy-loading */
+        isLoading: {
+          type: Boolean,
+          value: false,
+          notify: true
+        },
+        /**
+         * A nested representation of items, maintains list state; gets rebuilt when items changes,
+         *  when lazy-loading data add a new key-value pair to this object containing the data.
+         */
+        parts: {
+          type: Object,
+          notify: true
+        },
+        /* The reduced list of items to actually render, built from parts */
+        _items: {
+          type: Array,
+          readOnly: true,
+          computed: '_computeItems(parts)'
+        }
+      },
+      observers: ['_computeParts(items)'],
+      listeners: {
+        toggle: 'toggleOpen'
+      },
+      /**
+       * Takes a parts object and optionally a start point for an array then iterates over the
+       *  object starting at the root if there isn't a location already set and finds all open nodes
+       *  recursively calling itself to ensure order is preserved once flattened.
+       *
+       * @param {Object} parts
+       * @param {Object[]} [items]
+       * @returns {Object[]}
+       */
+      _computeItems(parts, items) {
+        if (!items) items = parts.root;
+        const newItems = [];
+
+        // Push all items into the new array, and if there is a child item then push all of the children.
+        items.forEach(item => {
+          item.open = Boolean(item.open);
+          newItems.push(item);
+          if (item.open)
+            newItems.push(...this._computeItems(parts, parts[item.id] || []));
+        });
+
+        return newItems;
+      },
+      /**
+       * Takes the flat items structure and builds out a map of parent-child elements which gets
+       *  stored and used for optimized rendering later.
+       *
+       * @param {Object[]} items
+       */
+      _computeParts(items) {
+        const parts = {};
+
+        items.forEach(item => {
+          // Fetch the parentId or set it to 'root' if there isn't one
+          const parentId = this._getParentId(item);
+          if (!parts[parentId]) parts[parentId] = [];
+          parts[parentId].push(item);
+        });
+
+        this.set('parts', parts);
+      },
+      /**
+       * Used to fetch the parentId if it's available or default back to 'root'.
+       *
+       * @param {Object} item
+       * @returns {String|Number}
+       */
+      _getParentId(item) {
+        return (Boolean(item.parentId) || item.parentId === 0) ? item.parentId : 'root';
+      },
+      /**
+       * Called when an item's open status is changed.  Update parts with children if lazy-loading then call update
+       *  with the updated parts object once complete, update will always need to be called even if no changes were
+       *  made to the parts object.  It's recommended to optimize your loader by checking to see if items already exist
+       *  before attempting to fetch them.
+       *
+       * @param {object} item
+       * @param {object} parts
+       * @param {function} update
+       */
+      fetchChildren(item, parts, update) {
+        update(parts);
+      },
+      /**
+       * Captures toggle events in order to toggle the open state of the items.
+       *
+       * @listens hc-nested-list#toggle
+       * @param {CustomEvent} event
+       * @param {object} detail
+       */
+      toggleOpen(event, detail) {
+        // Block interactions while loading items
+        if (this.isLoading) return;
+        this.isLoading = true;
+
+        const parts = Object.assign({}, this.parts);
+        const items = parts[this._getParentId(detail.item)];
+        const id = detail.item.id;
+        let item;
+
+        for (let i = 0; i < items.length; i++) {
+          if (items[i].id === id) {
+            // Toggle our item open
+            items[i].open = !items[i].open;
+
+            // If we have a callback we can utilize it to reflect data back into our template (iron-list quirk).
+            if (detail.cb) detail.cb(items[i]);
+
+            // If the item was toggled closed, we don't care about the rest, break out.
+            if (!items[i].open) break;
+            // If it was opened, store it for use later.
+            else item = items[i];
+          } else items[i].open = false; // If it's not the item we want, ensure it's closed
+        }
+
+        // fetch children and update when done.
+        const self = this;
+        this.fetchChildren(item, parts, parts => {
+          self.set('parts', Object.assign({}, parts));
+          self.isLoading = false;
+        });
+      }
+    });
+
+    /**
+     * Event for toggling a hc-nested-list item open/close
+     *
+     * @event hc-nested-list#toggle
+     * @type {object}
+     * @property {object} item - the item data
+     */
+  </script>
+</dom-module>
