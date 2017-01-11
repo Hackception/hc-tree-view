@@ -4,13 +4,14 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, minimum-scale=1, initial-scale=1, user-scalable=yes">
 
-    <title>hc-tree-view demo</title>
+    <title>hc-nested-list demo</title>
 
     <script src="../../webcomponentsjs/webcomponents-lite.js"></script>
 
     <link rel="import" href="../../iron-demo-helpers/demo-pages-shared-styles.html">
     <link rel="import" href="../../iron-demo-helpers/demo-snippet.html">
-    <link rel="import" href="../hc-tree-view.html">
+    <link rel="import" href="../hc-nested-list.html">
+    <link rel="import" href="../hc-nested-list-item.html">
     <link rel="import" href="../test/utils.html">
 
     <style is="custom-style" include="demo-pages-shared-styles">
@@ -18,25 +19,45 @@
   </head>
   <body>
     <div class="vertical-section-container centered">
-      <h3>Basic hc-tree-view demo</h3>
+      <h3><code>hc-nested-list demo</code></h3>
       <demo-snippet>
         <template>
-          <hc-tree-view-demo></hc-tree-view-demo>
-          <dom-module id="hc-tree-view-demo">
+          <hc-nested-list-demo></hc-nested-list-demo>
+          <dom-module id="hc-nested-list-demo">
             <template>
-              <hc-tree-view items="{{items}}">
+              <style>
+                .item {
+                  cursor: pointer;
+                }
+                .item:hover, .item[open] {
+                  font-weight: bold;
+                }
+                [slot=loader] {
+                  text-align: center;
+                }
+                hc-nested-list {
+                  --hc-nested-list-loader: {
+                    background-color: rgba(0, 0, 0, 0.6);
+                  };
+                }
+              </style>
+
+              <hc-nested-list items="{{items}}">
+                <div slot="loader">
+                  test loader!!!
+                </div>
                 <template>
-                  <div class="item">
-                    <paper-checkbox></paper-checkbox>
-                    <iron-icon icon="icons:add-circle-outline"></iron-icon>
-                    <span>[[item.label]]</span>
+                  <div class="item" open$="[[item.open]]">
+                    <hc-nested-list-item item="{{item}}">
+                      <span>[[item.label]]</span>
+                    </hc-nested-list-item>
                   </div>
                 </template>
-              </hc-tree-view>
+              </hc-nested-list>
             </template>
             <script>
               Polymer({
-                is: 'hc-tree-view-demo',
+                is: 'hc-nested-list-demo',
                 properties: {
                   items: {
                     type: Array,
