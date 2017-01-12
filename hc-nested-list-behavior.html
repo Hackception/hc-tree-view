@@ -1,0 +1,178 @@
+<link rel="import" href="../polymer/polymer.html">
+
+<script>
+  /* global hc */
+  // Ensure our namespace exists
+  window.hc = window.hc || {};
+
+  /**
+   * Use `hc.NestedListBehavior` to implement a flat data structure of nested items into a list with
+   *  children getting added/remove to emulate open/close functionality.
+   *
+   * @polymerBehavior hc.NestedListBehavior
+   */
+  hc.NestedListBehavior = {
+    properties: {
+      /* The currently visible subset of items from the items property. */
+      _items: {
+        type: Array,
+        readOnly: true,
+        computed: '_computeItems(parts)'
+      },
+      /* Notifies if the element is in the process of loading, mainly used for lazy-loading. */
+      isLoading: {
+        type: Boolean,
+        value: false,
+        notify: true
+      },
+      /* The property name for the id on each item. */
+      itemIdName: {
+        type: String,
+        value: 'id'
+      },
+      /* The property name for the parentId on each item. */
+      itemParentIdName: {
+        type: String,
+        value: 'parentId'
+      },
+      /**
+       * The flat array of items to build the nested list structure from, requires an id and
+       *  parentId as defined by the itemIdName and itemParentIdName properties.
+       *
+       * @type {Object[]}
+       */
+      items: Array,
+      /**
+       * A nested representation of items, maintains list state; gets rebuilt when items changes,
+       *  when lazy-loading data add a new key-value pair to this object containing the data.  The
+       *  key value is used for looking up parentId to fetch the list of child items.  All item data
+       *  is taken from the items array.
+       */
+      parts: {
+        type: Object,
+        notify: true
+      }
+    },
+    observers: ['_computeParts(items)'],
+    listeners: {
+      toggle: 'toggleOpen'
+    },
+    /**
+     * Takes a parts object and optionally a start point for an array then iterates over the
+     *  object starting at the root if there isn't a location already set and finds all open nodes
+     *  recursively calling itself to ensure order is preserved once flattened.
+     *
+     * @param {Object} parts
+     * @param {Object[]} [items=parts.root]
+     * @param {String} [idName=this.itemIdName]
+     * @returns {Object[]}
+     */
+    _computeItems(parts, items = parts.root, idName = this.itemIdName) {
+      // Can't calculate items without parts or the name of the id property.
+      if (!idName || !parts) return [];
+
+      const newItems = [];
+
+      // Push all items into the new array, and if there is a child item then push all of the children.
+      items.forEach(item => {
+        item.open = Boolean(item.open);
+        newItems.push(item);
+        if (item.open)
+          newItems.push(...this._computeItems(parts, parts[item[idName]] || []));
+      });
+
+      return newItems;
+    },
+    /**
+     * Takes the flat items structure and builds out a map of parent-child elements which gets
+     *  stored and used for optimized rendering later.
+     *
+     * @param {Object[]} items
+     */
+    _computeParts(items) {
+      const parts = {};
+
+      items.forEach(item => {
+        // Fetch the parentId or set it to 'root' if there isn't one
+        const parentId = this._getParentId(item);
+        if (!parts[parentId]) parts[parentId] = [];
+        parts[parentId].push(item);
+      });
+
+      this.set('parts', parts);
+    },
+    /**
+     * Used to fetch the parentId if it's available or default back to 'root'.
+     *
+     * @param {Object} item
+     * @param {String} [parentIdName=this.itemParentIdName]
+     * @returns {String|Number}
+     */
+    _getParentId(item, parentIdName = this.itemParentIdName) {
+      return (Boolean(item[parentIdName]) || item[parentIdName] === 0) ?
+        item[parentIdName] :
+        'root';
+    },
+    /**
+     * Called when an item's open status is changed.  Update parts with children if lazy-loading then call update
+     *  with the updated parts object once complete, update will always need to be called even if no changes were
+     *  made to the parts object.  It's recommended to optimize your loader by checking to see if items already exist
+     *  before attempting to fetch them.
+     *
+     * @param {Object} item
+     * @param {Object} parts
+     * @param {Function} update
+     */
+    fetchChildren(item, parts, update) {
+      update(parts);
+    },
+    /**
+     * Captures toggle events in order to toggle the open state of the items.
+     *
+     * @listens hc-nested-list-behavior#toggle
+     * @param {CustomEvent} [event]
+     * @param {Object} detail
+     * @param {String} [idName=this.itemIdName]
+     */
+    toggleOpen(event, detail, idName = this.itemIdName) {
+      // Block interactions while loading items
+      if (this.isLoading) return;
+      this.isLoading = true;
+
+      const parts = Object.assign({}, this.parts);
+      const items = parts[this._getParentId(detail.item)];
+      const id = detail.item[idName];
+      let item;
+
+      for (let i = 0; i < items.length; i++) {
+        if (items[i][idName] === id) {
+          // Toggle our item open
+          items[i].open = !items[i].open;
+
+          // If we have a callback we can utilize it to reflect data back into our template (iron-list quirk).
+          if (detail.cb) detail.cb(items[i]);
+
+          // If the item was toggled closed, we don't care about the rest, break out.
+          if (!items[i].open) break;
+          // If it was opened, store it for use later.
+          else item = items[i];
+        } else items[i].open = false; // If it's not the item we want, ensure it's closed
+      }
+
+      // fetch children and update when done.
+      const self = this;
+      this.fetchChildren(item, parts, parts => {
+        self.set('parts', Object.assign({}, parts));
+        self.isLoading = false;
+      });
+    }
+  };
+
+  /**
+   * Event for toggling a hc-nested-list item open/close
+   *
+   * @event hc-nested-list-behavior#toggle
+   * @type {object}
+   * @property {object} item - the item data
+   */
+</script>

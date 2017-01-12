@@ -1,9 +1,14 @@
 <link rel="import" href="../polymer/polymer.html">
 
 <!--
-`hc-nested-list-item`
-An item element for properly handling toggling open/close state within a `hc-nested-list`.
-This element blocks all click events so changing selected status will need to be handled manually within.
+`hc-nested-list-item` used to wrap content within an instanced of `hc-nested-list` to properly handle
+click events for triggering open/close state changes as well as circumventing the broken bindings
+limitation of iron-list.
+
+### Styling
+Custom property | Description | Default
+----------------|-------------|----------
+`--hc-nested-list-item` | A mixin for styling this element | {}
 
 @demo demo/hc-nested-list.html
 -->
@@ -11,6 +16,11 @@ This element blocks all click events so changing selected status will need to be
 <dom-module id="hc-nested-list-item">
   <template>
     <style>
+      :host {
+        display: block;
+
+        @apply --hc-nested-list-item;
+      }
     </style>
 
     <slot></slot>
@@ -30,7 +40,7 @@ This element blocks all click events so changing selected status will need to be
       /**
        * Fires the toggle event required by hc-nested-list to open/close content sections.
        *
-       * @fires hc-nested-list#toggle
+       * @fires hc-nested-list-behavior#toggle
        * @param {ClickEvent} event
        */
       fireOpenEvent(event) {

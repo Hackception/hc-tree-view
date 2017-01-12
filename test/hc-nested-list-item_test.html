@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, minimum-scale=1, initial-scale=1, user-scalable=yes">
+
+    <title>hc-nested-list-item test</title>
+
+    <script src="../../webcomponentsjs/webcomponents-lite.js"></script>
+    <script src="../../web-component-tester/browser.js"></script>
+
+    <link rel="import" href="utils.html">
+    <link rel="import" href="../hc-nested-list-item.html">
+  </head>
+  <body>
+    <test-fixture id="basic">
+      <template>
+        <hc-nested-list-item>
+          <span id="header">header</span>
+        </hc-nested-list-item>
+      </template>
+    </test-fixture>
+
+    <script>
+      describe('hc-nested-list-item', () => {
+        let element;
+
+        beforeEach(() => element = fixture('basic'));
+
+        // Public Functions
+        describe('fireOpenEvent(event)', () => {
+          const event = {};
+          let fireSpy;
+
+          beforeEach(() => {
+            element.item = {test: 'test'};
+            event.stopPropagation = sinon.spy();
+            element.set = sinon.spy();
+            fireSpy = sinon.spy(element, 'fire');
+          });
+
+          it('should block event propagation', () => {
+            element.fireOpenEvent(event);
+            expect(event.stopPropagation.calledOnce).to.equal(true);
+          });
+          it('should fire a toggle event providing the item data and a callback function', () => {
+            element.fireOpenEvent(event);
+            expect(fireSpy.called).to.equal(true);
+            expect(fireSpy.calledWithMatch('toggle', {item: element.item})).to.equal(true);
+            expect(element.set.called).to.equal(false);
+          });
+          it('should update item when the toggle event callback function is called', done => {
+            element.addEventListener('toggle', event => {
+              const item = {test: 'test2'};
+              event.detail.cb(item);
+              expect(element.set.calledOnce).to.equal(true);
+              expect(element.set.calledWith('item', item)).to.equal(true);
+              done();
+            });
+            element.fireOpenEvent(event);
+          });
+          it('should be bound to a click even', done => {
+            element.fireOpenEvent = sinon.spy();
+            element.querySelector('#header').click();
+
+            flush(() => {
+              expect(element.fireOpenEvent.calledOnce).to.equal(true);
+              done();
+            });
+          });
+        });
+      });
+    </script>
+  </body>
+</html>

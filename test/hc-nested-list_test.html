@@ -68,11 +68,21 @@
             i.push(...parents);
             expect(element._computeItems(p)).to.deep.equal(i);
           });
+          it('should be called when parts changes', () => {
+            element._computeItems = sinon.spy();
+            element.parts = {};
+            expect(element._computeItems.calledOnce).to.equal(true);
+          });
         });
         describe('_computeParts(items)', () => {
           it('should turn an array of items into a map based on the parentId', () => {
             element._computeParts(items);
             expect(element.set.calledWith('parts', parts)).to.equal(true);
+          });
+          it('should be called whne items is updated', () => {
+            element._computeParts = sinon.spy();
+            element.items = [];
+            expect(element._computeParts.calledOnce).to.equal(true);
           });
         });
         describe('_getParentId(item)', () => {
@@ -145,6 +155,14 @@
             element.isLoading = true;
             element.toggleOpen(event, event.detail);
             expect(fetchChildrenSpy.called).to.equal(false);
+          });
+          it('should run when the toggle event is fired', done => {
+            element.toggleOpen = sinon.spy();
+            element.fire('toggle');
+            flush(() => {
+              expect(element.toggleOpen.calledOnce).to.equal(true);
+              done();
+            });
           });
         });
       });
