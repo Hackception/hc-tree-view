@@ -69,7 +69,7 @@
      */
     _computeItems(parts, items = parts.root, idName = this.itemIdName) {
       // Can't calculate items without parts or the name of the id property.
-      if (!idName || !parts) return [];
+      if (!parts) return [];
 
       const newItems = [];
 
@@ -109,7 +109,7 @@
      * @returns {String|Number}
      */
     _getParentId(item, parentIdName = this.itemParentIdName) {
-      return (Boolean(item[parentIdName]) || item[parentIdName] === 0) ?
+      return (item[parentIdName] || item[parentIdName] === 0) ?
         item[parentIdName] :
         'root';
     },
