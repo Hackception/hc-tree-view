@@ -1,0 +1,79 @@
+<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="hc-nested-list-behavior.html">
+<link rel="import" href="../iron-list/iron-list.html">
+
+<!--
+`hc-nested-list` An optimized tree-view based on a flat data structure.
+
+### Styling
+Custom property | Description | Default
+----------------|-------------|----------
+`--hc-nested-list` | A mixin for styling this element | {}
+`--hc-nested-list-loader` | A mixin for styling the loader wrapping element | {}
+`--hc-nested-list-items` | A mixin for styling the iron-list within this element | {}
+
+@demo demo/hc-nested-list.html
+-->
+<dom-module id="hc-nested-list">
+  <template>
+    <style>
+      :host {
+        display: block;
+        @apply --hc-nested-list;
+      }
+      #loader {
+        position: absolute;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        right: 0;
+        z-index: 999;
+
+        @apply --hc-nested-list-loader;
+      }
+      #list {
+        @apply --hc-nested-list-items;
+      }
+    </style>
+
+    <iron-list
+      id="list"
+      items="[[_items]]"
+      max-physical-count="[[_items.length]]"
+      as="item"
+      multi-selection="[[multiSelection]]"
+      selected-item="{{selectedItem}}"
+      selected-items="{{selectedItems}}"
+      selection-enabled="[[selectionEnabled]]"
+      >
+      <div id="loader" hidden$="[[!isLoading]]">
+        <slot name="loader"></slot>
+      </div>
+      <slot></slot>
+    </iron-list>
+  </template>
+
+  <script>
+    Polymer({
+      /* global hc */
+      is: 'hc-nested-list',
+      behaviors: [hc.NestedListBehavior],
+      properties: {
+        /* Enables multi-selection of items; inherited from iron-list */
+        multiSelection: Boolean,
+        /* Used when multiSelection is false to show the item that is selected; inherited from iron-list */
+        selectedItem: {
+          type: Object,
+          notify: true
+        },
+        /* Used when multiSelection is true to show all selected items; inherited from iron-list */
+        selectedItems: {
+          type: Array,
+          notify: true
+        },
+        /* Enables selection of items; inherited from iron-list */
+        selectionEnabled: Boolean
+      }
+    });
+  </script>
+</dom-module>

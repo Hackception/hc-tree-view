@@ -9,6 +9,7 @@
     <script src="../../webcomponentsjs/webcomponents-lite.js"></script>
     <script src="../../web-component-tester/browser.js"></script>
 
+    <link rel="import" href="utils.html">
     <link rel="import" href="../hc-tree-view.html">
   </head>
   <body>
@@ -20,10 +21,17 @@
 
     <script>
       describe('hc-tree-view', () => {
-        it('instantiating the element works', () => {
-          const element = fixture('basic');
-          expect(element.is).to.equal('hc-tree-view');
+        const count = 5;
+        let element, items;
+
+        beforeEach(() => {
+          items = window.buildItems(count, count, count);
+
+          element = fixture('basic');
         });
+
+        // Private Functions
+        // Public Functions
       });
     </script>
   </body>
