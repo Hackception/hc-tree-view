@@ -107,6 +107,32 @@
             expect(spy.calledWith({test: 'test'})).to.equal(true);
           });
         });
+        describe('itemSelection(event, detail)', () => {
+          const detail = {
+            item: {test: 'test'}
+          };
+
+          it('should listen for "item-selection" event', done => {
+            element.itemSelection = sinon.spy();
+            element.fire('item-selection');
+            flush(() => {
+              expect(element.itemSelection.calledOnce).to.equal(true);
+              done();
+            });
+          });
+          it('should call selectItem with detail.item on the iron-list when detail.selected', () => {
+            element.$.list.selectItem = sinon.spy();
+            detail.selected = true;
+            element.itemSelection(null, detail);
+            expect(element.$.list.selectItem.calledWith(detail.item)).to.equal(true);
+          });
+          it('should call deselectItem with detail.item on the iron-list when !detail.selected', () => {
+            element.$.list.deselectItem = sinon.spy();
+            detail.selected = false;
+            element.itemSelection(null, detail);
+            expect(element.$.list.deselectItem.calledWith(detail.item)).to.equal(true);
+          });
+        });
         describe('toggleOpen(event, detail)', () => {
           const event = {};
           let fetchChildrenSpy;

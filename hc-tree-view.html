@@ -1,8 +1,6 @@
 <link rel="import" href="../polymer/polymer.html">
 <link rel="import" href="hc-nested-list.html">
-<link rel="import" href="../paper-checkbox/paper-checkbox.html">
-<link rel="import" href="../iron-icon/iron-icon.html">
-<link rel="import" href="../iron-icons/iron-icons.html">
+<link rel="import" href="hc-tree-node.html">
 
 <!--
 `hc-tree-view`
@@ -19,13 +17,17 @@ An optimized tree-view based on a flat data structure.
       }
     </style>
 
-    <hc-nested-list items="{{items}}">
+    <hc-nested-list
+      items="{{items}}"
+      multi-selection="[[!singleSelection]]"
+      selection-enabled="[[!disableSelection]]"
+      selected-items="{{selectedItems}}"
+      >
       <template>
-        <div class="item" data-index="{{index}}">
-          <paper-checkbox></paper-checkbox>
-          <iron-icon icon="icons:add-circle-outline"></iron-icon>
-          <span>[[item.label]]</span>
-        </div>
+        <hc-tree-node
+          item="{{item}}"
+          selected="{{selected}}"
+        ></hc-tree-node>
       </template>
     </hc-nested-list>
   </template>
@@ -35,6 +37,18 @@ An optimized tree-view based on a flat data structure.
       is: 'hc-tree-view',
       properties: {
         items: Array,
+        singleSelection: {
+          type: Boolean,
+          value: false
+        },
+        disableSelection: {
+          type: Boolean,
+          value: false
+        },
+        selectedItems: {
+          type: Array,
+          notify: true
+        }
       },
       /**
        * Takes an array of items then finds all references and changes their selected status in the nested list.

@@ -55,7 +55,8 @@
     },
     observers: ['_computeParts(items)'],
     listeners: {
-      toggle: 'toggleOpen'
+      toggle: 'toggleOpen',
+      'item-selection': 'itemSelection'
     },
     /**
      * Takes a parts object and optionally a start point for an array then iterates over the
@@ -127,6 +128,17 @@
       update(parts);
     },
     /**
+     * Changes node selection state based on detail.selected state.
+     *
+     * @listens hc-nested-list-behavior#item-selection
+     * @param {CustomEvent} [event]
+     * @param {Object} detail
+     */
+    itemSelection(event, detail) {
+      if (detail.selected) this.$.list.selectItem(detail.item);
+      else this.$.list.deselectItem(detail.item);
+    },
+    /**
      * Captures toggle events in order to toggle the open state of the items.
      *
      * @listens hc-nested-list-behavior#toggle
@@ -169,10 +181,18 @@
   };
 
   /**
+   * Event for changing the selection status of a hc-nested-list item
+   *
+   * @event hc-nested-list-behavior#item-selection
+   * @type {Object}
+   * @property {Object} item - the item to change selection status for
+   * @property {Boolean} selection - the updated selection status
+   */
+  /**
    * Event for toggling a hc-nested-list item open/close
    *
    * @event hc-nested-list-behavior#toggle
-   * @type {object}
-   * @property {object} item - the item data
+   * @type {Object}
+   * @property {Object} item - the item data
    */
 </script>
