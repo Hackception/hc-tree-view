@@ -31,7 +31,7 @@
             selected = true;
 
           it('should fire the "select-node" event', done => {
-            element.addEventListener('select-node', event => {
+            element.addEventListener('item-selection', event => {
               expect(event.detail.item).to.deep.equal(item);
               expect(event.detail.selected).to.equal(selected);
               done();
