@@ -48,14 +48,8 @@ Custom property | Description | Default
         event.stopPropagation();
 
         // Trigger an event to toggle open state instead.
-        const self = this;
         this.fire('toggle', {
-          item: this.item,
-          // Templates don't actually update when the outside data updates, this allows us to reflect open
-          //  changes back into our local template so we can style and such.
-          cb(item) {
-            self.set('item', Object.assign({}, item));
-          }
+          item: this.item
         });
       }
     });

@@ -41,60 +41,6 @@
           element.set = sinon.spy();
         });
 
-        // Private Functions
-        describe('_computeItems(parts)', () => {
-          it('should turn a parts object into an array', () =>
-            expect(element._computeItems(parts)).to.deep.equal(parts.root));
-          it('should nest children after the parent when parent is open', () => {
-            const p = Object.assign({}, parts);
-            const parents = Object.assign([], p.root);
-            const parent = parents[1];
-            parent.open = true;
-            const children = Object.assign([], p[parent.id]);
-            const child = children[1];
-            child.open = true;
-
-            const i = [
-              parents.shift(),
-              parents.shift(),
-              children.shift(),
-              children.shift()
-            ];
-            // Push all grandchildren
-            i.push(...p[child.id]);
-            // Push remaining children
-            i.push(...children);
-            // Push remaining parents
-            i.push(...parents);
-            expect(element._computeItems(p)).to.deep.equal(i);
-          });
-          it('should be called when parts changes', () => {
-            element._computeItems = sinon.spy();
-            element.parts = {};
-            expect(element._computeItems.calledOnce).to.equal(true);
-          });
-        });
-        describe('_computeParts(items)', () => {
-          it('should turn an array of items into a map based on the parentId', () => {
-            element._computeParts(items);
-            expect(element.set.calledWith('parts', parts)).to.equal(true);
-          });
-          it('should be called whne items is updated', () => {
-            element._computeParts = sinon.spy();
-            element.items = [];
-            expect(element._computeParts.calledOnce).to.equal(true);
-          });
-        });
-        describe('_getParentId(item)', () => {
-          it('should return item.parentId when it is truthy', () =>
-            expect(element._getParentId({parentId: 'a'})).to.equal('a'));
-          it('should return root when item.parentId is falsey and !== 0', () =>
-            expect(element._getParentId({})).to.equal('root'));
-          it('should return 0 when item.parentId === 0', () =>
-            expect(element._getParentId({parentId: 0})).to.equal(0));
-          it('should return root when item.parentId is an empty string', () =>
-            expect(element._getParentId({parentId: ''})).to.equal('root'));
-        });
         // Public Functions
         describe('fetchChildren(item, parts, update)', () => {
           let spy;
@@ -169,14 +115,6 @@
             expect(element.set.calledWith('parts')).to.equal(true);
             expect(element.set.args[0][1].root[0].open).to.equal(false);
           });
-          it('should run the cb function if it is provided', done => {
-            event.detail.cb = item => {
-              expect(item).to.deep.equal(Object.assign(event.detail.item, {open: true}));
-              done();
-            };
-            element.parts = parts;
-            element.toggleOpen(event, event.detail);
-          });
           it('should not run if isLoading is true', () => {
             element.isLoading = true;
             element.toggleOpen(event, event.detail);
@@ -190,6 +128,60 @@
               done();
             });
           });
+        });
+        // Private Functions
+        describe('_computeItems(parts)', () => {
+          it('should turn a parts object into an array', () =>
+            expect(element._computeItems(parts)).to.deep.equal(parts.root));
+          it('should nest children after the parent when parent is open', () => {
+            const p = Object.assign({}, parts);
+            const parents = Object.assign([], p.root);
+            const parent = parents[1];
+            parent.open = true;
+            const children = Object.assign([], p[parent.id]);
+            const child = children[1];
+            child.open = true;
+
+            const i = [
+              parents.shift(),
+              parents.shift(),
+              children.shift(),
+              children.shift()
+            ];
+            // Push all grandchildren
+            i.push(...p[child.id]);
+            // Push remaining children
+            i.push(...children);
+            // Push remaining parents
+            i.push(...parents);
+            expect(element._computeItems(p)).to.deep.equal(i);
+          });
+          it('should be called when parts changes', () => {
+            element._computeItems = sinon.spy();
+            element.parts = {};
+            expect(element._computeItems.calledOnce).to.equal(true);
+          });
+        });
+        describe('_computeParts(items)', () => {
+          it('should turn an array of items into a map based on the parentId', () => {
+            element._computeParts(items);
+            expect(element.set.calledWith('parts', parts)).to.equal(true);
+          });
+          it('should be called whne items is updated', () => {
+            element._computeParts = sinon.spy();
+            element.items = [];
+            expect(element._computeParts.calledOnce).to.equal(true);
+          });
+        });
+        describe('_getParentId(item)', () => {
+          it('should return item.parentId when it is truthy', () =>
+            expect(element._getParentId({parentId: 'a'})).to.equal('a'));
+          it('should return root when item.parentId is falsey and !== 0', () =>
+            expect(element._getParentId({})).to.equal('root'));
+          it('should return 0 when item.parentId === 0', () =>
+            expect(element._getParentId({parentId: 0})).to.equal(0));
+          it('should return root when item.parentId is an empty string', () =>
+            expect(element._getParentId({parentId: ''})).to.equal('root'));
         });
       });
     </script>

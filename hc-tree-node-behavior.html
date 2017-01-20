@@ -13,11 +13,6 @@
    */
   hc.TreeNodeBehavior = {
     properties: {
-      /* Holds the tri-state value */
-      _state: {
-        type: String,
-        value: 'off'
-      },
       /* Allows toggling between indeterminate nodes being considered selected or not selected */
       indeterminateIsSelected: {
         type: Boolean,
@@ -28,11 +23,16 @@
         type: Boolean,
         value: false,
         notify: true
+      },
+      /* Holds the tri-state value */
+      _state: {
+        type: String,
+        value: 'off'
       }
     },
     observers: [
-      '_stateChanged(_state, indeterminateIsSelected)',
-      '_selectedChanged(selected, indeterminateIsSelected)'
+      '_selectedChanged(selected, indeterminateIsSelected)',
+      '_stateChanged(_state, indeterminateIsSelected)'
     ],
     /**
      * Notifies the tree that a child item made an update to it's selection status.
