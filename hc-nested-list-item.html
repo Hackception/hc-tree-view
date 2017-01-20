@@ -40,7 +40,7 @@ Custom property | Description | Default
       /**
        * Fires the toggle event required by hc-nested-list to open/close content sections.
        *
-       * @fires hc-nested-list-behavior#toggle
+       * @fires hc-nested-list-behavior#item-open-changed
        * @param {TapEvent} event
        */
       fireOpenEvent(event) {
@@ -48,8 +48,9 @@ Custom property | Description | Default
         event.stopPropagation();
 
         // Trigger an event to toggle open state instead.
-        this.fire('toggle', {
-          item: this.item
+        this.fire('item-open-changed', {
+          item: this.item,
+          open: !this.item.open
         });
       }
     });

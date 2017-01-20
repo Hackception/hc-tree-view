@@ -21,7 +21,8 @@ A node for the tree view, handles the basic node template with proper tristate s
 
     <hc-nested-list-item item="{{item}}">
       <paper-tristate-checkbox
-        state="{{_state}}"
+        id="checkbox"
+        state="{{state}}"
         on-tap="_stopPropagation"
       ></paper-tristate-checkbox>
       <iron-icon icon="icons:add-circle-outline"></iron-icon>

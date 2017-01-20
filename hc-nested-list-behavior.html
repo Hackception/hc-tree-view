@@ -55,8 +55,8 @@
     },
     observers: ['_computeParts(items)'],
     listeners: {
-      toggle: 'toggleOpen',
-      'item-selection': 'itemSelection'
+      'item-open-changed': 'itemOpenChanged',
+      'item-selected-changed': 'itemSelectedChanged'
     },
     /**
      * Called when an item's open status is changed.  Update parts with children if lazy-loading then call update
@@ -74,23 +74,23 @@
     /**
      * Changes node selection state based on detail.selected state.
      *
-     * @listens hc-nested-list-behavior#item-selection
+     * @listens hc-nested-list-behavior#item-selected-changed
      * @param {CustomEvent} [event]
      * @param {Object} detail
      */
-    itemSelection(event, detail) {
+    itemSelectedChanged(event, detail) {
       if (detail.selected) this.$.list.selectItem(detail.item);
       else this.$.list.deselectItem(detail.item);
     },
     /**
-     * Captures toggle events in order to toggle the open state of the items.
+     * Handles changes to the open status of an item.
      *
-     * @listens hc-nested-list-behavior#toggle
+     * @listens hc-nested-list-behavior#item-open-changed
      * @param {CustomEvent} [event]
      * @param {Object} detail
      * @param {String} [idName=this.itemIdName]
      */
-    toggleOpen(event, detail, idName = this.itemIdName) {
+    itemOpenChanged(event, detail, idName = this.itemIdName) {
       // Block interactions while loading items
       if (this.isLoading) return;
       this.isLoading = true;
@@ -103,10 +103,10 @@
       for (let i = 0; i < items.length; i++) {
         if (items[i][idName] === id) {
           // Toggle our item open
-          items[i].open = !items[i].open;
+          items[i].open = detail.open;
 
           // If the item was toggled closed, we don't care about the rest, break out.
-          if (!items[i].open) break;
+          if (!detail.open) break;
           // If it was opened, store it for use later.
           else item = items[i];
         } else items[i].open = false; // If it's not the item we want, ensure it's closed
@@ -138,6 +138,7 @@
       // Push all items into the new array, and if there is a child item then push all of the children.
       items.forEach(item => {
         item.open = Boolean(item.open);
+        item.hasChildren = Boolean(parts[item.id]);
         newItems.push(item);
         if (item.open)
           newItems.push(...this._computeItems(parts, parts[item[idName]] || []));
@@ -180,15 +181,23 @@
   /**
    * Event for changing the selection status of a hc-nested-list item
    *
-   * @event hc-nested-list-behavior#item-selection
+   * @event hc-nested-list-behavior#item-selected-changed
    * @type {Object}
    * @property {Object} item - the item to change selection status for
    * @property {Boolean} selection - the updated selection status
    */
   /**
-   * Event for toggling a hc-nested-list item open/close
+   * Event for changing the state of a hc-nested-list item
    *
-   * @event hc-nested-list-behavior#toggle
+   * @event hc-nested-list-behavior#item-state-changed
+   * @type {Object}
+   * @property {Object} item - the item to change selection status for
+   * @property {String|null} state - the updated state
+   */
+  /**
+   * Event for changed the open flag on a hc-nested-list item
+   *
+   * @event hc-nested-list-behavior#item-open-changed
    * @type {Object}
    * @property {Object} item - the item data
    */

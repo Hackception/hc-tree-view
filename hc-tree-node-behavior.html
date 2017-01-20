@@ -25,29 +25,31 @@
         notify: true
       },
       /* Holds the tri-state value */
-      _state: {
+      state: {
         type: String,
         value: 'off'
       }
     },
     observers: [
       '_selectedChanged(selected, indeterminateIsSelected)',
-      '_stateChanged(_state, indeterminateIsSelected)'
+      '_stateChanged(state, indeterminateIsSelected, item.hasChildren)'
     ],
-    /**
-     * Notifies the tree that a child item made an update to it's selection status.
-     *
-     * @fires hc-nested-list-behavior#item-selection
-     * @param {Object} item
-     * @param {Boolean} selected
-     */
-    _fireSelectNodeEvent(item, selected) {
-      this.fire('item-selection', {item, selected});
+    ready() {
+      // Overload the default tap functionality to prevent user clicks from setting indeterminate state.
+      this.$.checkbox._regularTap = () => {
+        if (this.state == null)
+          this.state = 'on';
+        else if (this.state == 'on')
+          this.state = 'off';
+        else if (this.state == 'off')
+          this.state = 'on';
+      };
     },
     /**
      * Ensures that changes to selected are properly reflected in the state attribute which controls how the checkbox
      *  looks, also takes indeterminate state into account for selection.
      *
+     * @fires hc-nested-list-behavior#item-selected-changed
      * @param {Boolean} selected
      * @param {Boolean} indeterminateIsSelected
      */
@@ -57,24 +59,31 @@
 
       // Ensure a change was made to avoid cyclical updates
       if (state !== this.state) this.state = state;
+      // Notify the list that selection was changed
+      this.fire('item-selected-changed', {item: this.item, selected});
     },
     /**
      * Ensures that changes to state are properly reflectd in the selected attribute which is used to calculate the
      *  selected items for the tree.
      *
+     * @fires hc-nested-list-behavior#item-state-changed
      * @param {String} state
      * @param {Boolean} indeterminateIsSelected
+     * @param {Boolean} hasChildren
      */
-    _stateChanged(state, indeterminateIsSelected) {
+    _stateChanged(state, indeterminateIsSelected, hasChildren) {
+      // off => null => on, if there's no children then skip null
+      if (!state && !hasChildren)
+        this.state = state = 'on'; // Update local and element versions
+
       const selected = state === 'on' ? true :
         state === 'off' ? false :
         indeterminateIsSelected;
 
       // Ensure a change was made to avoid cyclical updates
-      if (selected !== this.selected) {
-        this.selected = selected;
-        this._fireSelectNodeEvent(this.item, selected);
-      }
-    },
+      if (selected !== this.selected) this.selected = selected;
+      // Notify the list that state was changed
+      this.fire('item-state-changed', {item: this.item, state});
+    }
   };
 </script>

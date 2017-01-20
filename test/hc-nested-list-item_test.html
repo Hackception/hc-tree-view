@@ -43,10 +43,10 @@
             element.fireOpenEvent(event);
             expect(event.stopPropagation.calledOnce).to.equal(true);
           });
-          it('should fire a toggle event providing the item data', () => {
+          it('should fire a item-open-changed event providing the item data', () => {
             element.fireOpenEvent(event);
             expect(fireSpy.called).to.equal(true);
-            expect(fireSpy.calledWithMatch('toggle', {item: element.item})).
+            expect(fireSpy.calledWithMatch('item-open-changed', {item: element.item, open: !element.item.open})).
               to.equal(true);
           });
           it('should be bound to a click event', done => {
