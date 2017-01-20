@@ -1,0 +1,54 @@
+<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="../iron-icon/iron-icon.html">
+<link rel="import" href="../iron-icons/iron-icons.html">
+<link rel="import" href="../paper-tristate-checkbox/paper-tristate-checkbox.html">
+<link rel="import" href="hc-nested-list-item.html">
+<link rel="import" href="hc-tree-node-behavior.html">
+
+<!--
+`hc-tree-node`
+A node for the tree view, handles the basic node template with proper tristate selection handling.
+
+@demo demo/index.html
+-->
+<dom-module id="hc-tree-node">
+  <template>
+    <style>
+      :host {
+        display: block;
+      }
+    </style>
+
+    <hc-nested-list-item item="{{item}}">
+      <paper-tristate-checkbox
+        state="{{_state}}"
+        on-tap="_stopPropagation"
+      ></paper-tristate-checkbox>
+      <iron-icon icon="icons:add-circle-outline"></iron-icon>
+      <span>[[item.label]]</span>
+    </hc-nested-list-item>
+  </template>
+
+  <script>
+    Polymer({
+      /* global hc */
+      is: 'hc-tree-node',
+      behaviors: [hc.TreeNodeBehavior],
+      properties: {
+        /* The item data to use for rendering the node, needs to notify to reflect changes back into the tree */
+        item: {
+          type: Object,
+          notify: true
+        }
+      },
+      /**
+       * Used to stop event propagation when clicking on the checkbox.
+       *
+       * @param {TapEvent} event
+       */
+      _stopPropagation(event) {
+        event.stopPropagation();
+      }
+    });
+  </script>
+</dom-module>

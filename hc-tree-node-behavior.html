@@ -1,0 +1,80 @@
+<link rel="import" href="../polymer/polymer.html">
+
+<script>
+  /* global hc */
+  // Ensure namespace exists
+  window.hc = window.hc || {};
+
+  /**
+   * Use `hc.TreeNodeBehavior` to implement a tree node that supports tristate selection, reflecting changes to selected
+   *  and state back to one another, needed to support iron-list showing selected items while maintaining tristate.
+   *
+   * @polymerBehavior hc.TreeNodeBehavior
+   */
+  hc.TreeNodeBehavior = {
+    properties: {
+      /* Allows toggling between indeterminate nodes being considered selected or not selected */
+      indeterminateIsSelected: {
+        type: Boolean,
+        value: false
+      },
+      /* False when state is off, otherwise it's true */
+      selected: {
+        type: Boolean,
+        value: false,
+        notify: true
+      },
+      /* Holds the tri-state value */
+      _state: {
+        type: String,
+        value: 'off'
+      }
+    },
+    observers: [
+      '_selectedChanged(selected, indeterminateIsSelected)',
+      '_stateChanged(_state, indeterminateIsSelected)'
+    ],
+    /**
+     * Notifies the tree that a child item made an update to it's selection status.
+     *
+     * @fires hc-nested-list-behavior#item-selection
+     * @param {Object} item
+     * @param {Boolean} selected
+     */
+    _fireSelectNodeEvent(item, selected) {
+      this.fire('item-selection', {item, selected});
+    },
+    /**
+     * Ensures that changes to selected are properly reflected in the state attribute which controls how the checkbox
+     *  looks, also takes indeterminate state into account for selection.
+     *
+     * @param {Boolean} selected
+     * @param {Boolean} indeterminateIsSelected
+     */
+    _selectedChanged(selected, indeterminateIsSelected) {
+      const state = (this.state === null && !(selected ^ indeterminateIsSelected)) ? null :
+        selected ? 'on' : 'off';
+
+      // Ensure a change was made to avoid cyclical updates
+      if (state !== this.state) this.state = state;
+    },
+    /**
+     * Ensures that changes to state are properly reflectd in the selected attribute which is used to calculate the
+     *  selected items for the tree.
+     *
+     * @param {String} state
+     * @param {Boolean} indeterminateIsSelected
+     */
+    _stateChanged(state, indeterminateIsSelected) {
+      const selected = state === 'on' ? true :
+        state === 'off' ? false :
+        indeterminateIsSelected;
+
+      // Ensure a change was made to avoid cyclical updates
+      if (selected !== this.selected) {
+        this.selected = selected;
+        this._fireSelectNodeEvent(this.item, selected);
+      }
+    },
+  };
+</script>

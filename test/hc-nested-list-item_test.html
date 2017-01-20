@@ -43,23 +43,13 @@
             element.fireOpenEvent(event);
             expect(event.stopPropagation.calledOnce).to.equal(true);
           });
-          it('should fire a toggle event providing the item data and a callback function', () => {
+          it('should fire a toggle event providing the item data', () => {
             element.fireOpenEvent(event);
             expect(fireSpy.called).to.equal(true);
-            expect(fireSpy.calledWithMatch('toggle', {item: element.item})).to.equal(true);
-            expect(element.set.called).to.equal(false);
+            expect(fireSpy.calledWithMatch('toggle', {item: element.item})).
+              to.equal(true);
           });
-          it('should update item when the toggle event callback function is called', done => {
-            element.addEventListener('toggle', event => {
-              const item = {test: 'test2'};
-              event.detail.cb(item);
-              expect(element.set.calledOnce).to.equal(true);
-              expect(element.set.calledWith('item', item)).to.equal(true);
-              done();
-            });
-            element.fireOpenEvent(event);
-          });
-          it('should be bound to a click even', done => {
+          it('should be bound to a click event', done => {
             element.fireOpenEvent = sinon.spy();
             element.querySelector('#header').click();
 

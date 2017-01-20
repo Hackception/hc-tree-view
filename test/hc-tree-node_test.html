@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, minimum-scale=1, initial-scale=1, user-scalable=yes">
+
+    <title>hc-tree-node test</title>
+
+    <script src="../../webcomponentsjs/webcomponents-lite.js"></script>
+    <script src="../../web-component-tester/browser.js"></script>
+
+    <link rel="import" href="utils.html">
+    <link rel="import" href="../hc-tree-node.html">
+  </head>
+  <body>
+    <test-fixture id="basic">
+      <template>
+        <hc-tree-node></hc-tree-node>
+      </template>
+    </test-fixture>
+
+    <script>
+      describe('hc-tree-node', () => {
+        let element;
+
+        beforeEach(() => element = fixture('basic'));
+
+        // Private Functions
+        describe('_fireSelectNodeEvent(item, selected)', () => {
+          const item = {test: 'test'},
+            selected = true;
+
+          it('should fire the "select-node" event', done => {
+            element.addEventListener('select-node', event => {
+              expect(event.detail.item).to.deep.equal(item);
+              expect(event.detail.selected).to.equal(selected);
+              done();
+            });
+            element._fireSelectNodeEvent(item, selected);
+          });
+        });
+        describe('_selectedChanged(selected)', () => {
+          beforeEach(() => element._stateChanged = sinon.spy());
+
+          // Basic cases
+          it('should update state to "on" when selected and state is "off"', () => {
+            element.state = 'off';
+            element._selectedChanged(true);
+            expect(element.state).to.equal('on');
+          });
+          it('should update state to "off" when !selected and state is "on"', () => {
+            element.state = 'on';
+            element._selectedChanged(false);
+            expect(element.state).to.equal('off');
+          });
+          // Indeterminate cases
+          it('should update state to "on" when state is null and !indeterminateIsSelected and selected', () => {
+            element.state = null;
+            element._selectedChanged(true, false);
+            expect(element.state).to.equal('on');
+          });
+          it('should update state to "off" when state is null and indeterminateIsSelected and !selected', () => {
+            element.state = null;
+            element._selectedChanged(false, true);
+            expect(element.state).to.equal('off');
+          });
+          // No change cases
+          it('should not update state when selected and state is "on"', () => {
+            element.state = 'on';
+            element._selectedChanged(true);
+            expect(element.state).to.equal('on');
+          });
+          it('should not update state when !selected and state is "off"', () => {
+            element.state = 'off';
+            element._selectedChanged(false);
+            expect(element.state).to.equal('off');
+          });
+          it('should not update state for all other cases', () => {
+            element.state = null;
+            element._selectedChanged(true, true);
+            expect(element.state).to.equal(null);
+            element._selectedChanged(false, false);
+            expect(element.state).to.equal(null);
+          });
+        });
+        describe('_stateChanged(state)', () => {
+          beforeEach(() => {
+            element._fireSelectNodeEvent = sinon.spy();
+            element._selectedChanged = sinon.spy();
+          });
+
+          // Basic cases
+          it('should update selected to true when state is "on" and !selected', () => {
+            element.selected = false;
+            element._stateChanged('on');
+            expect(element.selected).to.equal(true);
+            expect(element._fireSelectNodeEvent.calledWith(undefined, true)).to.equal(true);
+          });
+          it('should update selected to false when state is "off" and selected', () => {
+            element.selected = true;
+            element._stateChanged('off');
+            expect(element.selected).to.equal(false);
+            expect(element._fireSelectNodeEvent.calledWith(undefined, true)).to.equal(false);
+          });
+          // Indeterminate cases
+          it('should update selected to true when state is null and indeterminateIsSelected and !selected', () => {
+            element.selected = false;
+            element._stateChanged(null, true);
+            expect(element.selected).to.equal(true);
+            expect(element._fireSelectNodeEvent.calledWith(undefined, true)).to.equal(true);
+          });
+          it('should update selected to false when state is null and !indeterminateIsSelected and selected', () => {
+            element.selected = true;
+            element._stateChanged(null, false);
+            expect(element.selected).to.equal(false);
+            expect(element._fireSelectNodeEvent.calledWith(undefined, true)).to.equal(false);
+          });
+          // No change cases
+          it('should not update selected when state is "on" and selected', () => {
+            element.selected = true;
+            element._stateChanged('on');
+            expect(element.selected).to.equal(true);
+            expect(element._fireSelectNodeEvent.called).to.equal(false);
+          });
+          it('should not update selected when state is "off" and !selected', () => {
+            element.selected = false;
+            element._stateChanged('off');
+            expect(element.selected).to.equal(false);
+            expect(element._fireSelectNodeEvent.called).to.equal(false);
+          });
+          it('should not update selected for all other cases', () => {
+            element.selected = false;
+            element._stateChanged(null, false);
+            expect(element.selected).to.equal(false);
+            element.selected = true;
+            element._stateChanged(null, true);
+            expect(element.selected).to.equal(true);
+            expect(element._fireSelectNodeEvent.called).to.equal(false);
+          });
+        });
+        describe('_stopPropagation(event)', () => {
+          it('should stop event propagation', () => {
+            const event = {
+              stopPropagation: sinon.spy()
+            };
+            element._stopPropagation(event);
+            expect(event.stopPropagation.calledOnce).to.equal(true);
+          });
+          it('should be called when checkbox is clicked', () => {
+            element._stopPropagation = sinon.spy();
+            element.$$('paper-tristate-checkbox').click();
+            expect(element._stopPropagation.calledOnce).to.equal(true);
+          });
+        });
+      });
+    </script>
+  </body>
+</html>

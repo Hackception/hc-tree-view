@@ -41,6 +41,94 @@
           element.set = sinon.spy();
         });
 
+        // Public Functions
+        describe('fetchChildren(item, parts, update)', () => {
+          let spy;
+
+          beforeEach(() => spy = sinon.spy());
+
+          it('should call set on parts with the parts object', () => {
+            element.fetchChildren({}, {test: 'test'}, spy);
+            expect(spy.calledOnce).to.equal(true);
+            expect(spy.calledWith({test: 'test'})).to.equal(true);
+          });
+        });
+        describe('itemSelection(event, detail)', () => {
+          const detail = {
+            item: {test: 'test'}
+          };
+
+          it('should listen for "item-selection" event', done => {
+            element.itemSelection = sinon.spy();
+            element.fire('item-selection');
+            flush(() => {
+              expect(element.itemSelection.calledOnce).to.equal(true);
+              done();
+            });
+          });
+          it('should call selectItem with detail.item on the iron-list when detail.selected', () => {
+            element.$.list.selectItem = sinon.spy();
+            detail.selected = true;
+            element.itemSelection(null, detail);
+            expect(element.$.list.selectItem.calledWith(detail.item)).to.equal(true);
+          });
+          it('should call deselectItem with detail.item on the iron-list when !detail.selected', () => {
+            element.$.list.deselectItem = sinon.spy();
+            detail.selected = false;
+            element.itemSelection(null, detail);
+            expect(element.$.list.deselectItem.calledWith(detail.item)).to.equal(true);
+          });
+        });
+        describe('toggleOpen(event, detail)', () => {
+          const event = {};
+          let fetchChildrenSpy;
+
+          beforeEach(() => {
+            event.detail = {
+              item: Object.assign({}, parts.root[0])
+            };
+            fetchChildrenSpy = sinon.spy(element, 'fetchChildren');
+          });
+
+          it('should toggle open state to true for the element and call fetchChildren', () => {
+            element.parts = parts;
+            element.toggleOpen(event, event.detail);
+            expect(element.set.calledOnce).to.equal(true);
+            expect(element.set.calledWith('parts')).to.equal(true);
+            expect(element.set.args[0][1].root[0].open).to.equal(true);
+            expect(fetchChildrenSpy.calledWithMatch(element.parts.root[0], element.parts)).to.equal(true);
+          });
+          it('should toggle open state to false for all other elements at the same level', () => {
+            parts.root[1].open = true;
+            element.parts = parts;
+            element.toggleOpen(event, event.detail);
+            expect(element.set.calledOnce).to.equal(true);
+            expect(element.set.calledWith('parts')).to.equal(true);
+            expect(element.set.args[0][1].root[0].open).to.equal(true);
+            expect(element.set.args[0][1].root[1].open).to.equal(false);
+          });
+          it('should toggle open state to false if it was already true', () => {
+            parts.root[0].open = true;
+            element.parts = parts;
+            element.toggleOpen(event, event.detail);
+            expect(element.set.calledOnce).to.equal(true);
+            expect(element.set.calledWith('parts')).to.equal(true);
+            expect(element.set.args[0][1].root[0].open).to.equal(false);
+          });
+          it('should not run if isLoading is true', () => {
+            element.isLoading = true;
+            element.toggleOpen(event, event.detail);
+            expect(fetchChildrenSpy.called).to.equal(false);
+          });
+          it('should run when the toggle event is fired', done => {
+            element.toggleOpen = sinon.spy();
+            element.fire('toggle');
+            flush(() => {
+              expect(element.toggleOpen.calledOnce).to.equal(true);
+              done();
+            });
+          });
+        });
         // Private Functions
         describe('_computeItems(parts)', () => {
           it('should turn a parts object into an array', () =>
@@ -94,76 +182,6 @@
             expect(element._getParentId({parentId: 0})).to.equal(0));
           it('should return root when item.parentId is an empty string', () =>
             expect(element._getParentId({parentId: ''})).to.equal('root'));
-        });
-        // Public Functions
-        describe('fetchChildren(item, parts, update)', () => {
-          let spy;
-
-          beforeEach(() => spy = sinon.spy());
-
-          it('should call set on parts with the parts object', () => {
-            element.fetchChildren({}, {test: 'test'}, spy);
-            expect(spy.calledOnce).to.equal(true);
-            expect(spy.calledWith({test: 'test'})).to.equal(true);
-          });
-        });
-        describe('toggleOpen(event, detail)', () => {
-          const event = {};
-          let fetchChildrenSpy;
-
-          beforeEach(() => {
-            event.detail = {
-              item: Object.assign({}, parts.root[0])
-            };
-            fetchChildrenSpy = sinon.spy(element, 'fetchChildren');
-          });
-
-          it('should toggle open state to true for the element and call fetchChildren', () => {
-            element.parts = parts;
-            element.toggleOpen(event, event.detail);
-            expect(element.set.calledOnce).to.equal(true);
-            expect(element.set.calledWith('parts')).to.equal(true);
-            expect(element.set.args[0][1].root[0].open).to.equal(true);
-            expect(fetchChildrenSpy.calledWithMatch(element.parts.root[0], element.parts)).to.equal(true);
-          });
-          it('should toggle open state to false for all other elements at the same level', () => {
-            parts.root[1].open = true;
-            element.parts = parts;
-            element.toggleOpen(event, event.detail);
-            expect(element.set.calledOnce).to.equal(true);
-            expect(element.set.calledWith('parts')).to.equal(true);
-            expect(element.set.args[0][1].root[0].open).to.equal(true);
-            expect(element.set.args[0][1].root[1].open).to.equal(false);
-          });
-          it('should toggle open state to false if it was already true', () => {
-            parts.root[0].open = true;
-            element.parts = parts;
-            element.toggleOpen(event, event.detail);
-            expect(element.set.calledOnce).to.equal(true);
-            expect(element.set.calledWith('parts')).to.equal(true);
-            expect(element.set.args[0][1].root[0].open).to.equal(false);
-          });
-          it('should run the cb function if it is provided', done => {
-            event.detail.cb = item => {
-              expect(item).to.deep.equal(Object.assign(event.detail.item, {open: true}));
-              done();
-            };
-            element.parts = parts;
-            element.toggleOpen(event, event.detail);
-          });
-          it('should not run if isLoading is true', () => {
-            element.isLoading = true;
-            element.toggleOpen(event, event.detail);
-            expect(fetchChildrenSpy.called).to.equal(false);
-          });
-          it('should run when the toggle event is fired', done => {
-            element.toggleOpen = sinon.spy();
-            element.fire('toggle');
-            flush(() => {
-              expect(element.toggleOpen.calledOnce).to.equal(true);
-              done();
-            });
-          });
         });
       });
     </script>
