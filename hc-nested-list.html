@@ -41,10 +41,6 @@ Custom property | Description | Default
       items="[[_items]]"
       max-physical-count="[[_items.length]]"
       as="item"
-      multi-selection="[[multiSelection]]"
-      selected-item="{{selectedItem}}"
-      selected-items="{{selectedItems}}"
-      selection-enabled="[[selectionEnabled]]"
       >
       <div id="loader" hidden$="[[!isLoading]]">
         <slot name="loader"></slot>
@@ -57,23 +53,7 @@ Custom property | Description | Default
     Polymer({
       /* global hc */
       is: 'hc-nested-list',
-      behaviors: [hc.NestedListBehavior],
-      properties: {
-        /* Enables multi-selection of items; inherited from iron-list */
-        multiSelection: Boolean,
-        /* Used when multiSelection is false to show the item that is selected; inherited from iron-list */
-        selectedItem: {
-          type: Object,
-          notify: true
-        },
-        /* Used when multiSelection is true to show all selected items; inherited from iron-list */
-        selectedItems: {
-          type: Array,
-          notify: true
-        },
-        /* Enables selection of items; inherited from iron-list */
-        selectionEnabled: Boolean
-      }
+      behaviors: [hc.NestedListBehavior]
     });
   </script>
 </dom-module>

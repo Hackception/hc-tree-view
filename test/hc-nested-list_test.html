@@ -53,31 +53,16 @@
             expect(spy.calledWith({test: 'test'})).to.equal(true);
           });
         });
-        describe('itemSelectedChanged(event, detail)', () => {
-          const detail = {
-            item: {test: 'test'}
-          };
+        describe('getParent(item)', () => {
+          beforeEach(() => {
+            element.items = items;
+            element.parts = parts;
+          });
 
-          it('should listen for "item-selected-changed" event', done => {
-            element.itemSelectedChanged = sinon.spy();
-            element.fire('item-selected-changed');
-            flush(() => {
-              expect(element.itemSelectedChanged.calledOnce).to.equal(true);
-              done();
-            });
-          });
-          it('should call selectItem with detail.item on the iron-list when detail.selected', () => {
-            element.$.list.selectItem = sinon.spy();
-            detail.selected = true;
-            element.itemSelectedChanged(null, detail);
-            expect(element.$.list.selectItem.calledWith(detail.item)).to.equal(true);
-          });
-          it('should call deselectItem with detail.item on the iron-list when !detail.selected', () => {
-            element.$.list.deselectItem = sinon.spy();
-            detail.selected = false;
-            element.itemSelectedChanged(null, detail);
-            expect(element.$.list.deselectItem.calledWith(detail.item)).to.equal(true);
-          });
+          it('should return undefined when there is no parent', () =>
+            expect(element.getParent(parts.root[0])).to.equal(undefined));
+          it('should return the parent from parts if it exists', () =>
+            expect(element.getParent(parts[parts.root[0].id][0])).to.deep.equal(parts.root[0]));
         });
         describe('itemOpenChanged(event, detail, idName)', () => {
           const event = {};

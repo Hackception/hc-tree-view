@@ -3,7 +3,6 @@
 <link rel="import" href="../iron-icons/iron-icons.html">
 <link rel="import" href="../paper-tristate-checkbox/paper-tristate-checkbox.html">
 <link rel="import" href="hc-nested-list-item.html">
-<link rel="import" href="hc-tree-node-behavior.html">
 
 <!--
 `hc-tree-node`
@@ -20,13 +19,23 @@ A node for the tree view, handles the basic node template with proper tristate s
     </style>
 
     <hc-nested-list-item item="{{item}}">
-      <paper-tristate-checkbox
-        id="checkbox"
-        state="{{state}}"
-        on-tap="_stopPropagation"
-      ></paper-tristate-checkbox>
-      <iron-icon icon="icons:add-circle-outline"></iron-icon>
-      <span>[[item.label]]</span>
+      <slot name="checkbox">
+        <paper-tristate-checkbox
+          id="checkbox"
+          state="{{item.state}}"
+          value="{{_value}}"
+          checked="[[checked]]"
+          unchecked="[[unchecked]]"
+          indeterminate="[[indeterminate]]"
+          on-state-changed="_stateChanged"
+        ></paper-tristate-checkbox>
+      </slot>
+      <slot name="icon">
+        <iron-icon icon="icons:add-circle-outline"></iron-icon>
+      </slot>
+      <slot name="label">
+        <span>[[item.label]]</span>
+      </slot>
     </hc-nested-list-item>
   </template>
 
@@ -34,21 +43,86 @@ A node for the tree view, handles the basic node template with proper tristate s
     Polymer({
       /* global hc */
       is: 'hc-tree-node',
-      behaviors: [hc.TreeNodeBehavior],
       properties: {
-        /* The item data to use for rendering the node, needs to notify to reflect changes back into the tree */
+        /* Used to change selected state when checkbox is checked */
+        checked: {
+          type: Boolean,
+          value: true
+        },
+        /* Used to change selected state when checkbox is indterminate */
+        indeterminate: {
+          type: Boolean,
+          value: false
+        },
+        /* This node's data */
         item: {
           type: Object,
           notify: true
+        },
+        /* Used to change selected state when checkbox is unchecked */
+        unchecked: {
+          type: Boolean,
+          value: false
+        },
+        /* Holds the value that determins selected status for the item */
+        _value: {
+          type: Boolean,
+          observer: '_valueChanged'
+        },
+        __init: {
+          type: Boolean,
+          value: true
         }
       },
+      ready() {
+        /**
+         * Overload the default tap functionality to prevent user clicks from setting indeterminate state,
+         *  and to prevent event bubbling.  This is using an annonymous function to keep the correct scope
+         *  that is provided by the checkbox element instead of an arrow function which will use the local
+         *  scope.
+         */
+        this.$.checkbox._regularTap = function(event) {
+          // event.stopPropagation();
+          this.state = this.state === 'on' ? 'off' : 'on';
+        };
+      },
       /**
-       * Used to stop event propagation when clicking on the checkbox.
+       * Watches for changes to the value for the checkbox then notifies the parent of selection changes.
        *
-       * @param {TapEvent} event
+       * @fires hc-tree-view-behavior#item-state-changed
+       * @param {CustomEvent} event
+       * @param {Object} detail
        */
-      _stopPropagation(event) {
-        event.stopPropagation();
+      _stateChanged(event, detail) {
+        // Prevent firing events if we don't have the necessary data
+        if (!this.item) return;
+
+        // When a change event happens, inform the list
+        this.fire('item-state-changed', {
+          item: this.item,
+          state: detail.value
+        });
+      },
+      /**
+       * Watches for changes to the value for the checkbox then notifies the parent of selection changes.
+       *
+       * @fires hc-tree-view-behavior#item-selected-changed
+       * @param {Boolean} value
+       */
+      _valueChanged(value) {
+        // Prevent firing events if we don't have the necessary data
+        if (!this.item) return;
+        // Prevent the initial event that happens upon loading
+        else if (this.__init) {
+          this.__init = false;
+          return;
+        }
+
+        // When a change event happens, inform the list
+        this.fire('item-selected-changed', {
+          item: this.item,
+          selected: value
+        });
       }
     });
   </script>

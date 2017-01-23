@@ -1,0 +1,141 @@
+<link rel="import" href="../polymer/polymer.html">
+
+<script>
+  /* global hc */
+  // Ensure our namespace exists
+  window.hc = window.hc || {};
+
+  /**
+   * Use `hc.NestedListBehavior` to implement a flat data structure of nested items into a list with
+   *  children getting added/remove to emulate open/close functionality.
+   *
+   * @polymerBehavior hc.NestedListBehavior
+   */
+  hc.TreeViewBehavior = {
+    properties: {
+      itemIdName: {
+        type: String,
+        value: 'id'
+      },
+      itemParentIdName: {
+        type: String,
+        value: 'parentId'
+      },
+      /* The list of all selected items without duplicates */
+      selectedItems: {
+        type: Array,
+        value: () => []
+      },
+      /* The parts object used by the list element */
+      _parts: Object
+    },
+    listeners: {
+      'item-selected-changed': 'itemSelectedChanged',
+      'item-state-changed': 'itemStateChanged'
+    },
+    /**
+     * Takes an array of one or more items and removes them from the selectedItems array.
+     *
+     * @param {Array.<Object>} items
+     */
+    deselectItems(items) {
+      const selectedItems = Object.assign([], this.selectedItems);
+      items.forEach(item => {
+        const index = selectedItems.findIndex(i => i[this.itemIdName] === item[this.itemIdName]);
+
+        // If the item exists, remove it.
+        if (index >= 0) selectedItems.splice(index, 1);
+      });
+
+      // Update selectedItems if there was an item removed
+      if (this.selectedItems.length !== selectedItems.length)
+        this.set('selectedItems', selectedItems);
+    },
+    /**
+     * Fetches the parent for the given item.
+     *
+     * @param {Object} item
+     * @returns {Object|undefined}
+     */
+    getParent(item) {
+      return this.$.list.getParent(item);
+    },
+    /**
+     * Makes calls to select or deselect the item based on the selected in the event.
+     *
+     * @listens hc-tree-view-behavior#item-selected-changed
+     * @param {CustomEvent} [event]
+     * @param {Object} detail
+     */
+    itemSelectedChanged(event, detail) {
+      this[detail.selected ? 'selectItems' : 'deselectItems']([detail.item]);
+    },
+    /**
+     * Updates the parents and children of this item that it's state was changed, update thiers as well if needed.
+     *
+     * @listens hc-tree-view-behavior#item-state-changed
+     * @param {CustomEvent} event
+     * @param {Object} detail
+     */
+    itemStateChanged(event, detail) {
+      const {item, state} = detail;
+
+      // Update up the chain (parents)
+      const parent = this.getParent(item);
+
+      if (parent) {
+        const siblings = this._parts[parent[this.itemIdName]];
+        const prevState = parent.state;
+
+        // If all of the siblings share the same state then set it for the parent, otherwise it's indeterminate
+        const newState = siblings.every(i => (i[this.itemIdName] === item[this.itemIdName] || i.state === state)) ?
+          state : null;
+
+        // If there's a change, update
+        if (prevState !== newState) parent.state = newState;
+      }
+
+      // Update down the chain (children) as long as the state changed to a discrete value (on|off)
+      if (item.hasChildren && state) {
+        const children = this._parts[item[this.itemIdName]];
+        children.forEach(child => {
+          if (child.state !== state) child.state = state;
+        });
+        // Change selected status for children, even if they are hidden.
+        this[state === 'on' ? 'selectItems' : 'deselectItems'](children);
+      }
+    },
+    /**
+     * Takes an array of one or more items adds them to the selectedItems array, preventing duplicates.
+     *
+     * @param {Array.<Object>} items
+     */
+    selectItems(items) {
+      // Add all of the items to the selectedItems as a set
+      const selectedSet = new Set(this.selectedItems);
+      items.forEach(item => selectedSet.add(item));
+
+      // Update selectedItems with an array version if an item was added
+      const selectedItems = Array.from(selectedSet);
+      if (this.selectedItems.length !== selectedItems.length)
+        this.set('selectedItems', selectedItems);
+    }
+  };
+
+  /**
+   * Event for changing the selection status of a tree node
+   *
+   * @event hc-tree-view-behavior#item-selected-changed
+   * @type {Object}
+   * @property {Object} item - the item to change selection status for
+   * @property {Boolean} selection - the updated selection status
+   */
+  /**
+   * Event for changing the state of a tree node
+   *
+   * @event hc-tree-view-behavior#item-state-changed
+   * @type {Object}
+   * @property {Object} item - the item to change state for
+   * @property {Boolean} state - the updated state
+   */
+</script>

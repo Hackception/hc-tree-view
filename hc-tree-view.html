@@ -1,6 +1,7 @@
 <link rel="import" href="../polymer/polymer.html">
 <link rel="import" href="hc-nested-list.html">
 <link rel="import" href="hc-tree-node.html">
+<link rel="import" href="hc-tree-view-behavior.html">
 
 <!--
 `hc-tree-view`
@@ -18,16 +19,14 @@ An optimized tree-view based on a flat data structure.
     </style>
 
     <hc-nested-list
+      id="list"
       items="{{items}}"
-      multi-selection="[[!singleSelection]]"
-      selection-enabled="[[!disableSelection]]"
-      selected-items="{{selectedItems}}"
+      parts="{{_parts}}"
+      item-id-name="[[itemIdName]]"
+      item-parent-id-name="[[itemParentIdName]]"
       >
       <template>
-        <hc-tree-node
-          item="{{item}}"
-          selected="{{selected}}"
-        ></hc-tree-node>
+        <hc-tree-node item="{{item}}"></hc-tree-node>
       </template>
     </hc-nested-list>
   </template>
@@ -35,39 +34,10 @@ An optimized tree-view based on a flat data structure.
   <script>
     Polymer({
       is: 'hc-tree-view',
+      behaviors: [hc.TreeViewBehavior],
       properties: {
-        items: Array,
-        singleSelection: {
-          type: Boolean,
-          value: false
-        },
-        disableSelection: {
-          type: Boolean,
-          value: false
-        },
-        selectedItems: {
-          type: Array,
-          notify: true
-        }
-      },
-      /**
-       * Takes an array of items then finds all references and changes their selected status in the nested list.
-       *
-       * @param {Object[]} items
-       */
-      selectItems(items) {
-        const parts = Object.assign({}, this._parts);
-
-        items.forEach(ref => {
-          const id = ref.id;
-          const parentId = this._getParentId(ref);
-          const item = parts[parentId].find(item => item.id === id);
-
-          if (item) item.selected = true;
-        });
-
-        this.set('_parts', parts);
-      },
+        items: Array
+      }
     });
   </script>
 </dom-module>
