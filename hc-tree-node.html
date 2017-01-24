@@ -18,6 +18,8 @@ Custom property | Description | Default
     <style>
       :host {
         display: block;
+
+        @apply --hc-tree-node;
       }
     </style>
 
@@ -34,7 +36,7 @@ Custom property | Description | Default
         ></paper-tristate-checkbox>
       </slot>
       <slot name="icon">
-        <iron-icon icon="icons:add-circle-outline"></iron-icon>
+        <iron-icon icon="[[_getIcon(item.open)]]"></iron-icon>
       </slot>
       <slot name="label">
         <span>[[item.label]]</span>
@@ -52,15 +54,22 @@ Custom property | Description | Default
           type: Boolean,
           value: true
         },
+        /* The icon to use when the item is closed */
+        closedIcon: {
+          type: String,
+          value: 'icons:remove-circle-outline'
+        },
         /* The value to use when state=null */
         indeterminate: {
           type: Boolean,
           value: false
         },
         /* This node's data */
-        item: {
-          type: Object,
-          notify: true
+        item: Object,
+        /* The icon to use when the item is open */
+        openIcon: {
+          type: String,
+          value: 'icons:add-circle-outline'
         },
         /* The value to use when state="off" */
         unchecked: {
@@ -93,6 +102,16 @@ Custom property | Description | Default
           event.stopPropagation();
           this.state = this.state === 'on' ? 'off' : 'on';
         };
+      },
+      /**
+       * Returns the openIcon when open is true, otherwise it returns the closedIcon.
+       *
+       * @private
+       * @param {Boolean} open
+       * @returns {String}
+       */
+      _getIcon(open) {
+        return open ? this.openIcon : this.closedIcon;
       },
       /**
        * Watches for changes to the value for the checkbox then notifies the parent of selection changes.
