@@ -10,6 +10,14 @@
 ### Styling
 Custom property | Description | Default
 ----------------|-------------|----------
+`--hc-tree-node` | A mixin to style the host | {}
+`--hc-tree-node-checkbox` | A mixin to style the checkbox | {}
+`--hc-tree-node-depth` | The depth value for displaying this item as nested | item.depth
+`--hc-tree-node-icon` | A mixin to style the icon | {}
+`--hc-tree-node-icon-open` | A mixin to style the icon when open | {}
+`--hc-tree-node-icon-closed` | A mixin to style the icon when closed | {}
+`--hc-tree-node-label` | A mixin to style the label | {}
+`--hc-tree-node-padding` | The amount of padding to use for each layer of depth added | 25px
 
 @demo demo/index.html
 -->
@@ -18,8 +26,24 @@ Custom property | Description | Default
     <style>
       :host {
         display: block;
+        padding-left: calc(var(--hc-tree-node-depth, 0) * var(--hc-tree-node-padding, 25px)) !important;
 
         @apply --hc-tree-node;
+      }
+      #checkbox {
+        @apply --hc-tree-node-checkbox;
+      }
+      #icon {
+        @apply --hc-tree-node-icon;
+      }
+      #icon[open] {
+        @apply --hc-tree-node-icon-open;
+      }
+      #icon:not([open]) {
+        @apply --hc-tree-node-icon-closed;
+      }
+      #label {
+        @apply --hc-tree-node-label;
       }
     </style>
 
@@ -36,10 +60,14 @@ Custom property | Description | Default
         ></paper-tristate-checkbox>
       </slot>
       <slot name="icon">
-        <iron-icon icon="[[_getIcon(item.open)]]"></iron-icon>
+        <iron-icon
+          id="icon"
+          icon="[[_getIcon(item.open)]]"
+          open$="[[item.open]]"
+        ></iron-icon>
       </slot>
       <slot name="label">
-        <span>[[item.label]]</span>
+        <span id="label">[[item.label]]</span>
       </slot>
     </hc-nested-list-item>
   </template>
@@ -91,6 +119,7 @@ Custom property | Description | Default
           value: true
         }
       },
+      observers: ['_updateDepth(item.depth)'],
       ready() {
         /**
          * Overload the default tap functionality to prevent user clicks from setting indeterminate state,
@@ -129,6 +158,11 @@ Custom property | Description | Default
         this.fire('item-state-changed', {
           item: this.item,
           state: detail.value
+        });
+      },
+      _updateDepth(depth) {
+        this.updateStyles({
+          '--hc-tree-node-depth': String(depth)
         });
       },
       /**

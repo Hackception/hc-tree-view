@@ -73,14 +73,16 @@
           let children, item, parent;
 
           beforeEach(() => {
+            element.$.list._computeItems = () => {};
+            element.getParent = () => parent;
+            element.selectItems = sinon.spy();
+            element.deselectItems = sinon.spy();
+
             parent = items[0];
             item = items[1];
             children = parts[parent.id];
             element._parts = parts;
             parent.state = 'off';
-            element.getParent = () => parent;
-            element.selectItems = sinon.spy();
-            element.deselectItems = sinon.spy();
           });
 
           it('should set the item parent state to detail.state if all siblings are detail.state', () => {

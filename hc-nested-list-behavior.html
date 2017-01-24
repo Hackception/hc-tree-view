@@ -78,18 +78,23 @@
      * Takes an item and looks up it's parent then returns it.
      *
      * @param {Object} item
+     * @param {Object} [parts = this.parts]
+     * @param {Array.<Object>} [items = this.items]
+     * @param {String} [idName = this.itemIdName]
      * @returns {Object|undefined}
      */
-    getParent(item) {
-      // Lookup the parent from the original items
-      const parent = this.items.find(i => i[this.itemIdName] === item[this.itemParentIdName]);
+    getParent(item, parts = this.parts, items = this.items, idName = this.itemIdName) {
+      // Ensure it has a parentId
+      const parentId = this._getParentId(item);
+      if (parentId === 'root') return;
 
-      // Break if there is no parent
+      // Fetch the parent by the id
+      const parent = (items || []).find(i => i[idName] === parentId);
       if (!parent) return;
 
       // Fetch the item from parts if it exists (maintain state)
-      return this.parts[this._getParentId(parent)].
-        find(i => i[this.itemIdName] === parent[this.itemIdName]);
+      const parents = parts[this._getParentId(parent)];
+      return parents ? parents.find(i => i[idName] === parentId) : undefined;
     },
     /**
      * Handles changes to the open status of an item.
@@ -145,9 +150,10 @@
 
       // Push all items into the new array, and if there is a child item then push all of the children.
       items.forEach(item => {
-        item.open = Boolean(item.open);
+        // Some properties need to be re-calculated every time we update the list to support lazy-loading
         item.hasChildren = Boolean(parts[item[this.itemIdName]]);
-        item.state = typeof item.state === 'undefined' ? 'off' : item.state;
+        item.depth = !(item.depth >= 0) ? this._getItemDepth(item, parts) : item.depth;
+
         newItems.push(item);
         if (item.open)
           newItems.push(...this._computeItems(parts, parts[item[idName]] || []));
@@ -169,10 +175,43 @@
         // Fetch the parentId or set it to 'root' if there isn't one
         const parentId = this._getParentId(item);
         if (!parts[parentId]) parts[parentId] = [];
-        parts[parentId].push(item);
+
+        // Add the item, but first ensure we have the minimum requirements for the object
+        parts[parentId].push(Object.assign({
+          open: false,
+          state: 'off',
+          depth: this._getItemDepth(item, parts)
+        }, item));
       });
 
       this.set('parts', parts);
+    },
+    /**
+     * Traces up the nested structure returning a depth for the items, if the item is a root item the depth
+     *  will be 0, if it can't be traced up to a root then it returns undefined.
+     *
+     * @private
+     * @param {Object} item
+     * @param {Object} parts
+     * @returns {Number|undefined}
+     */
+    _getItemDepth(item, parts) {
+      const parent = this.getParent(item, parts);
+      const parentId = this._getParentId(item);
+      let depth;
+
+      // You're a root node
+      if (!parent && parentId === 'root')
+        depth = 0;
+      // You've got a parent, as long as it has a depth you can increment it to get yours
+      else if (parent) {
+        const parentDepth = typeof parent.depth === 'number' ?
+          parent.depth :
+          this._getItemDepth(parent, parts);
+        depth = typeof parentDepth === 'number' ? parentDepth + 1 : undefined;
+      }
+
+      return depth;
     },
     /**
      * Used to fetch the parentId if it's available or default back to 'root'.
