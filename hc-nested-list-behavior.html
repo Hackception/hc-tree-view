@@ -13,12 +13,6 @@
    */
   hc.NestedListBehavior = {
     properties: {
-      /* The currently visible subset of items from the items property. */
-      _items: {
-        type: Array,
-        readOnly: true,
-        computed: '_computeItems(parts)'
-      },
       /* Notifies if the element is in the process of loading, mainly used for lazy-loading. */
       isLoading: {
         type: Boolean,
@@ -51,17 +45,94 @@
       parts: {
         type: Object,
         notify: true
+      },
+      /**
+       * The currently visible subset of items from the items property
+       *
+       * @private
+       */
+      _items: {
+        type: Array,
+        readOnly: true,
+        computed: '_computeItems(parts)'
       }
     },
     observers: ['_computeParts(items)'],
     listeners: {
-      toggle: 'toggleOpen'
+      'item-open-changed': 'itemOpenChanged'
+    },
+    /**
+     * Called when an item's open status is changed.  Update parts with children if lazy-loading then call update
+     *  with the updated parts object once complete, update will always need to be called even if no changes were
+     *  made to the parts object.  It's recommended to optimize your loader by checking to see if items already exist
+     *  before attempting to fetch them.
+     *
+     * @param {Object} item
+     * @param {Object} parts
+     * @param {Function} update
+     */
+    fetchChildren(item, parts, update) {
+      update(parts);
+    },
+    /**
+     * Takes an item and looks up it's parent then returns it.
+     *
+     * @param {Object} item
+     * @returns {Object|undefined}
+     */
+    getParent(item) {
+      // Lookup the parent from the original items
+      const parent = this.items.find(i => i[this.itemIdName] === item[this.itemParentIdName]);
+
+      // Break if there is no parent
+      if (!parent) return;
+
+      // Fetch the item from parts if it exists (maintain state)
+      return this.parts[this._getParentId(parent)].
+        find(i => i[this.itemIdName] === parent[this.itemIdName]);
+    },
+    /**
+     * Handles changes to the open status of an item.
+     *
+     * @listens hc-nested-list-behavior#item-open-changed
+     * @param {CustomEvent} [event]
+     * @param {Object} detail
+     * @param {String} [idName=this.itemIdName]
+     */
+    itemOpenChanged(event, detail, idName = this.itemIdName) {
+      // Block interactions while loading items
+      if (this.isLoading) return;
+      this.isLoading = true;
+
+      const parts = Object.assign({}, this.parts);
+      const items = parts[this._getParentId(detail.item)];
+      const id = detail.item[idName];
+      let item;
+
+      for (let i = 0; i < items.length; i++) {
+        if (items[i][idName] === id) {
+          // Toggle our item open
+          items[i].open = detail.open;
+
+          // If the item was toggled closed, we don't care about the rest, break out.
+          if (!detail.open) break;
+          // If it was opened, store it for use later.
+          else item = items[i];
+        } else items[i].open = false; // If it's not the item we want, ensure it's closed
+      }
+
+      // fetch children and update when done.
+      this.fetchChildren(item, parts, (parts => {
+        this.set('parts', Object.assign({}, parts));
+        this.isLoading = false;
+      }).bind(this));
     },
     /**
      * Takes a parts object and optionally a start point for an array then iterates over the
      *  object starting at the root if there isn't a location already set and finds all open nodes
      *  recursively calling itself to ensure order is preserved once flattened.
      *
+     * @private
      * @param {Object} parts
      * @param {Object[]} [items=parts.root]
      * @param {String} [idName=this.itemIdName]
@@ -69,13 +140,14 @@
      */
     _computeItems(parts, items = parts.root, idName = this.itemIdName) {
       // Can't calculate items without parts or the name of the id property.
-      if (!parts) return [];
-
+      if (!parts || !items) return [];
       const newItems = [];
 
       // Push all items into the new array, and if there is a child item then push all of the children.
       items.forEach(item => {
         item.open = Boolean(item.open);
+        item.hasChildren = Boolean(parts[item[this.itemIdName]]);
+        item.state = typeof item.state === 'undefined' ? 'off' : item.state;
         newItems.push(item);
         if (item.open)
           newItems.push(...this._computeItems(parts, parts[item[idName]] || []));
@@ -87,6 +159,7 @@
      * Takes the flat items structure and builds out a map of parent-child elements which gets
      *  stored and used for optimized rendering later.
      *
+     * @private
      * @param {Object[]} items
      */
     _computeParts(items) {
@@ -104,6 +177,7 @@
     /**
      * Used to fetch the parentId if it's available or default back to 'root'.
      *
+     * @private
      * @param {Object} item
      * @param {String} [parentIdName=this.itemParentIdName]
      * @returns {String|Number}
@@ -112,67 +186,14 @@
       return (item[parentIdName] || item[parentIdName] === 0) ?
         item[parentIdName] :
         'root';
-    },
-    /**
-     * Called when an item's open status is changed.  Update parts with children if lazy-loading then call update
-     *  with the updated parts object once complete, update will always need to be called even if no changes were
-     *  made to the parts object.  It's recommended to optimize your loader by checking to see if items already exist
-     *  before attempting to fetch them.
-     *
-     * @param {Object} item
-     * @param {Object} parts
-     * @param {Function} update
-     */
-    fetchChildren(item, parts, update) {
-      update(parts);
-    },
-    /**
-     * Captures toggle events in order to toggle the open state of the items.
-     *
-     * @listens hc-nested-list-behavior#toggle
-     * @param {CustomEvent} [event]
-     * @param {Object} detail
-     * @param {String} [idName=this.itemIdName]
-     */
-    toggleOpen(event, detail, idName = this.itemIdName) {
-      // Block interactions while loading items
-      if (this.isLoading) return;
-      this.isLoading = true;
-
-      const parts = Object.assign({}, this.parts);
-      const items = parts[this._getParentId(detail.item)];
-      const id = detail.item[idName];
-      let item;
-
-      for (let i = 0; i < items.length; i++) {
-        if (items[i][idName] === id) {
-          // Toggle our item open
-          items[i].open = !items[i].open;
-
-          // If we have a callback we can utilize it to reflect data back into our template (iron-list quirk).
-          if (detail.cb) detail.cb(items[i]);
-
-          // If the item was toggled closed, we don't care about the rest, break out.
-          if (!items[i].open) break;
-          // If it was opened, store it for use later.
-          else item = items[i];
-        } else items[i].open = false; // If it's not the item we want, ensure it's closed
-      }
-
-      // fetch children and update when done.
-      const self = this;
-      this.fetchChildren(item, parts, parts => {
-        self.set('parts', Object.assign({}, parts));
-        self.isLoading = false;
-      });
     }
   };
 
   /**
-   * Event for toggling a hc-nested-list item open/close
+   * Event for changed the open flag on a hc-nested-list item
    *
-   * @event hc-nested-list-behavior#toggle
-   * @type {object}
-   * @property {object} item - the item data
+   * @event hc-nested-list-behavior#item-open-changed
+   * @type {Object}
+   * @property {Object} item - the item data
    */
 </script>

@@ -21,17 +21,113 @@
 
     <script>
       describe('hc-tree-view', () => {
-        const count = 5;
-        let element, items;
+        const count = 5, parts = {};
+        let element, items, setSpy;
 
         beforeEach(() => {
-          items = window.buildItems(count, count, count);
-
+          items = window.buildItems(count, count, count, parts);
           element = fixture('basic');
+          setSpy = sinon.spy(element, 'set');
         });
 
-        // Private Functions
         // Public Functions
+        describe('deselectItems(items)', () => {
+          it('should remove all items in items from selectedItems', () => {
+            const item = {test: 'test'};
+            element.selectedItems = [item];
+            element.deselectItems([item]);
+            expect(element.set.calledWithMatch('selectedItems', [])).to.equal(true);
+          });
+          it('should not update selectedItems if no items were removed', () => {
+            element.deselectItems([]);
+            expect(element.set.called).to.equal(false);
+          });
+        });
+        describe('getParent(item)', () => {
+          it('should call getParent on the list', () => {
+            const item = {test: 'test'};
+            element.$.list.getParent = sinon.spy();
+            element.getParent(item);
+            expect(element.$.list.getParent.calledWithMatch(item)).to.equal(true);
+          });
+        });
+        describe('itemSelectedChanged(event, detail)', () => {
+          const item = {test: 'test'};
+          beforeEach(() => {
+            element.selectItems = sinon.spy();
+            element.deselectItems = sinon.spy();
+          });
+
+          it('should call selectItems with the item when detail.selected', () => {
+            element.itemSelectedChanged(null, {item, selected: true});
+            expect(element.selectItems.calledWithMatch([item])).to.equal(true);
+            expect(element.deselectItems.calledWithMatch([item])).to.equal(false);
+          });
+          it('should call deselectItems with the item when detail.selected', () => {
+            element.itemSelectedChanged(null, {item, selected: false});
+            expect(element.selectItems.calledWithMatch([item])).to.equal(false);
+            expect(element.deselectItems.calledWithMatch([item])).to.equal(true);
+          });
+        });
+        describe('itemStateChanged(event, detail)', () => {
+          let children, item, parent;
+
+          beforeEach(() => {
+            parent = items[0];
+            item = items[1];
+            children = parts[parent.id];
+            element._parts = parts;
+            parent.state = 'off';
+            element.getParent = () => parent;
+            element.selectItems = sinon.spy();
+            element.deselectItems = sinon.spy();
+          });
+
+          it('should set the item parent state to detail.state if all siblings are detail.state', () => {
+            const state = 'on';
+            children.forEach(item => item.state = state);
+            element.itemStateChanged(null, {item, state});
+            expect(parent.state).to.equal(state);
+          });
+          it('should set parent state to null when children do not agree', () => {
+            const state = 'on';
+            element.itemStateChanged(null, {item, state});
+            expect(parent.state).to.equal(null);
+          });
+          it('should not update item parent state when there is no change', () => {
+            const state = 'off';
+            children.forEach(item => item.state = state);
+            element.itemStateChanged(null, {item, state});
+            expect(parent.state).to.equal(state);
+          });
+          it('should update children to match state when state is discrete and hasChildren', () => {
+            const state = 'on';
+            item.hasChildren = true;
+            element.itemStateChanged(null, {item, state});
+            expect(element._parts[item.id].every(child => child.state === state)).to.equal(true);
+            expect(element.selectItems.calledWithMatch(element._parts[item.id])).to.equal(true);
+            expect(element.deselectItems.calledWithMatch(element._parts[item.id])).to.equal(false);
+            element.selectItems.reset();
+            element.itemStateChanged(null, {item, state: 'off'});
+            expect(element.selectItems.calledWithMatch(element._parts[item.id])).to.equal(false);
+            expect(element.deselectItems.calledWithMatch(element._parts[item.id])).to.equal(true);
+          });
+          it('should not update children state to match a state of null', () => {
+            const state = null;
+            item.hasChildren = true;
+            element.itemStateChanged(null, {item, state});
+            expect(element._parts[item.id].every(child => child.state === state)).to.equal(false);
+          });
+        });
+        describe('selectItems(items)', () => {
+          it('should add all items in items to selectedItems without duplicates', () => {
+            element.selectItems(items);
+            expect(element.set.calledWithMatch('selectedItems', items)).to.equal(true);
+            element.set.reset();
+            element.selectItems(items);
+            expect(element.set.calledWithMatch('selectedItems', items)).to.equal(false);
+          });
+        });
       });
     </script>
   </body>

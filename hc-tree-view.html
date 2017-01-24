@@ -1,12 +1,14 @@
 <link rel="import" href="../polymer/polymer.html">
 <link rel="import" href="hc-nested-list.html">
-<link rel="import" href="../paper-checkbox/paper-checkbox.html">
-<link rel="import" href="../iron-icon/iron-icon.html">
-<link rel="import" href="../iron-icons/iron-icons.html">
+<link rel="import" href="hc-tree-node.html">
+<link rel="import" href="hc-tree-view-behavior.html">
 
 <!--
-`hc-tree-view`
-An optimized tree-view based on a flat data structure.
+`hc-tree-view` an optimized tree-view based on a flat data structure.
+
+### Styling
+Custom property | Description | Default
+----------------|-------------|----------
 
 @demo demo/index.html
 -->
@@ -19,13 +21,15 @@ An optimized tree-view based on a flat data structure.
       }
     </style>
 
-    <hc-nested-list items="{{items}}">
+    <hc-nested-list
+      id="list"
+      items="{{items}}"
+      parts="{{_parts}}"
+      item-id-name="[[itemIdName]]"
+      item-parent-id-name="[[itemParentIdName]]"
+      >
       <template>
-        <div class="item" data-index="{{index}}">
-          <paper-checkbox></paper-checkbox>
-          <iron-icon icon="icons:add-circle-outline"></iron-icon>
-          <span>[[item.label]]</span>
-        </div>
+        <hc-tree-node item="{{item}}"></hc-tree-node>
       </template>
     </hc-nested-list>
   </template>
@@ -33,27 +37,11 @@ An optimized tree-view based on a flat data structure.
   <script>
     Polymer({
       is: 'hc-tree-view',
+      behaviors: [hc.TreeViewBehavior],
       properties: {
-        items: Array,
-      },
-      /**
-       * Takes an array of items then finds all references and changes their selected status in the nested list.
-       *
-       * @param {Object[]} items
-       */
-      selectItems(items) {
-        const parts = Object.assign({}, this._parts);
-
-        items.forEach(ref => {
-          const id = ref.id;
-          const parentId = this._getParentId(ref);
-          const item = parts[parentId].find(item => item.id === id);
-
-          if (item) item.selected = true;
-        });
-
-        this.set('_parts', parts);
-      },
+        /* The list of items to display in the tree, using a flat structure */
+        items: Array
+      }
     });
   </script>
 </dom-module>

@@ -2,7 +2,7 @@
 
 <!--
 `hc-nested-list-item` used to wrap content within an instanced of `hc-nested-list` to properly handle
-click events for triggering open/close state changes as well as circumventing the broken bindings
+tap events for triggering open/close state changes as well as circumventing the broken bindings
 limitation of iron-list.
 
 ### Styling
@@ -29,33 +29,29 @@ Custom property | Description | Default
     Polymer({
       is: 'hc-nested-list-item',
       properties: {
+        /* The item holding all data */
         item: {
           type: Object,
           notify: true
         }
       },
       listeners: {
-        click: 'fireOpenEvent'
+        tap: 'fireOpenEvent'
       },
       /**
        * Fires the toggle event required by hc-nested-list to open/close content sections.
        *
-       * @fires hc-nested-list-behavior#toggle
-       * @param {ClickEvent} event
+       * @fires hc-nested-list-behavior#item-open-changed
+       * @param {TapEvent} event
        */
       fireOpenEvent(event) {
         // Prevent this from changing selected state in iron-list.
         event.stopPropagation();
 
         // Trigger an event to toggle open state instead.
-        const self = this;
-        this.fire('toggle', {
+        this.fire('item-open-changed', {
           item: this.item,
-          // Templates don't actually update when the outside data updates, this allows us to reflect open
-          //  changes back into our local template so we can style and such.
-          cb(item) {
-            self.set('item', Object.assign({}, item));
-          }
+          open: !this.item.open
         });
       }
     });

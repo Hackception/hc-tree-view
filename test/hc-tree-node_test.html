@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, minimum-scale=1, initial-scale=1, user-scalable=yes">
+
+    <title>hc-tree-node test</title>
+
+    <script src="../../webcomponentsjs/webcomponents-lite.js"></script>
+    <script src="../../web-component-tester/browser.js"></script>
+
+    <link rel="import" href="utils.html">
+    <link rel="import" href="../hc-tree-node.html">
+  </head>
+  <body>
+    <test-fixture id="basic">
+      <template>
+        <hc-tree-node></hc-tree-node>
+      </template>
+    </test-fixture>
+
+    <script>
+      describe('hc-tree-node', () => {
+        let element, fireSpy;
+
+        beforeEach(() => {
+          element = fixture('basic');
+          fireSpy = sinon.spy(element, 'fire');
+        });
+
+        // Lifecycle Functions
+        describe('ready()', () => {
+          it('should preserve state if it is set on item.state', () => {
+            element.item = {
+              state: 'on'
+            };
+            element.ready();
+            expect(element.item.state).to.equal('on');
+            element.item = {
+              state: null
+            };
+            element.ready();
+            expect(element.item.state).to.equal(null);
+          });
+          it('should transition state from null to "on" when _regularTap', () => {
+            element.item = {
+              state: null
+            };
+            element.$.checkbox.click();
+            expect(element.item.state).to.equal('on');
+          });
+          it('should transition state from "on" to "off" when _regularTap', () => {
+            element.item = {
+              state: 'on'
+            };
+            element.$.checkbox.click();
+            expect(element.item.state).to.equal('off');
+          });
+          it('should transition state from "off" to "on" when _regularTap', () => {
+            element.item = {
+              state: 'off'
+            };
+            element.$.checkbox.click();
+            expect(element.item.state).to.equal('on');
+          });
+          it('should prevent bubbling when _regularTap', done => {
+            const spy = sinon.spy();
+            element.item = {
+              state: 'off'
+            };
+            element.addEventListener('tap', () => {
+              spy();
+            });
+            element.$.checkbox.click();
+            flush(() => {
+              expect(spy.called).to.equal(false);
+              done();
+            })
+          });
+        });
+        // Private Functions
+        describe('_stateChanged(event, detail)', () => {
+          const event = {};
+
+          it('should do nothing when there is no item', () => {
+            element._stateChanged();
+            expect(fireSpy.called).to.equal(false);
+          });
+          it('should fire a item-state-changed event', () => {
+            element.item = {test: 'test'};
+            event.detail = {
+              value: 'off'
+            };
+            element._stateChanged(event, event.detail);
+            expect(fireSpy.calledWith('item-state-changed', {
+              item: element.item,
+              state: event.detail.value
+            })).to.equal(true);
+          });
+        });
+        describe('_valueChanged(value)', () => {
+          it('should do nothing when there is no item', () => {
+            element._valueChanged();
+            expect(fireSpy.called).to.equal(false);
+          });
+          it('should reject the first run after item is set, while __init is true', () => {
+            element._valueChanged();
+            expect(fireSpy.called).to.equal(false);
+            expect(element.__init).to.equal(true);
+            element.item = {test: 'test'};
+
+            fireSpy.reset();
+            element._valueChanged();
+            expect(element.__init).to.equal(false);
+            expect(fireSpy.called).to.equal(false);
+          });
+          it('should fire the item-selected-changed event', () => {
+            element.item = {test: 'test'};
+            // Call twice since the first one is rejected
+            element._valueChanged(true);
+            element._valueChanged(true);
+            expect(fireSpy.calledWith('item-selected-changed', {
+              item: element.item,
+              selected: true
+            })).to.equal(true);
+          });
+        });
+      });
+    </script>
+  </body>
+</html>

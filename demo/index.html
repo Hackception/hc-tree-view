@@ -22,17 +22,13 @@
       <demo-snippet>
         <template>
           <hc-tree-view-demo></hc-tree-view-demo>
+
           <dom-module id="hc-tree-view-demo">
             <template>
-              <hc-tree-view items="{{items}}">
-                <template>
-                  <div class="item">
-                    <paper-checkbox></paper-checkbox>
-                    <iron-icon icon="icons:add-circle-outline"></iron-icon>
-                    <span>[[item.label]]</span>
-                  </div>
-                </template>
-              </hc-tree-view>
+              <hc-tree-view
+                items="{{items}}"
+                selected-items="{{selectedItems}}"
+              ></hc-tree-view>
             </template>
             <script>
               Polymer({
@@ -42,7 +38,12 @@
                     type: Array,
                     // This function is provided as part of test/utils.html, used for testing
                     value: () => window.buildItems(100, 100, 100)
-                  }
+                  },
+                  selectedItems: Array
+                },
+                observers: ['_log(selectedItems, selectedItems.splices)'],
+                _log(a) {
+                  console.log('_log', a);
                 }
               });
             </script>
