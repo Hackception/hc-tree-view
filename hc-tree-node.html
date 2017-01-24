@@ -5,8 +5,11 @@
 <link rel="import" href="hc-nested-list-item.html">
 
 <!--
-`hc-tree-node`
-A node for the tree view, handles the basic node template with proper tristate selection handling.
+`hc-tree-node` a node for the tree view, handles the basic node template with proper tristate selection handling.
+
+### Styling
+Custom property | Description | Default
+----------------|-------------|----------
 
 @demo demo/index.html
 -->
@@ -44,12 +47,12 @@ A node for the tree view, handles the basic node template with proper tristate s
       /* global hc */
       is: 'hc-tree-node',
       properties: {
-        /* Used to change selected state when checkbox is checked */
+        /* The value to use when state="on" */
         checked: {
           type: Boolean,
-          value: false
+          value: true
         },
-        /* Used to change selected state when checkbox is indterminate */
+        /* The value to use when state=null */
         indeterminate: {
           type: Boolean,
           value: false
@@ -59,17 +62,25 @@ A node for the tree view, handles the basic node template with proper tristate s
           type: Object,
           notify: true
         },
-        /* Used to change selected state when checkbox is unchecked */
+        /* The value to use when state="off" */
         unchecked: {
           type: Boolean,
           value: false
         },
-        /* Holds the value that determins selected status for the item */
+        /**
+         * Holds the value that determines selected status for the item
+         *
+         * @private
+         */
         _value: {
           type: Boolean,
           observer: '_valueChanged'
         },
-        /* Used to determine when this element is in initialization state to prevent extra events */
+        /**
+         * Used to determine when this element is in initialization state to prevent extra events
+         *
+         * @private
+         */
         __init: {
           type: Boolean,
           value: true
@@ -90,6 +101,7 @@ A node for the tree view, handles the basic node template with proper tristate s
       /**
        * Watches for changes to the value for the checkbox then notifies the parent of selection changes.
        *
+       * @private
        * @fires hc-tree-view-behavior#item-state-changed
        * @param {CustomEvent} event
        * @param {Object} detail
@@ -107,6 +119,7 @@ A node for the tree view, handles the basic node template with proper tristate s
       /**
        * Watches for changes to the value for the checkbox then notifies the parent of selection changes.
        *
+       * @private
        * @fires hc-tree-view-behavior#item-selected-changed
        * @param {Boolean} value
        */

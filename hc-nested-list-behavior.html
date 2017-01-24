@@ -46,7 +46,11 @@
         type: Object,
         notify: true
       },
-      /* The currently visible subset of items from the items property. */
+      /**
+       * The currently visible subset of items from the items property
+       *
+       * @private
+       */
       _items: {
         type: Array,
         readOnly: true,
@@ -128,6 +132,7 @@
      *  object starting at the root if there isn't a location already set and finds all open nodes
      *  recursively calling itself to ensure order is preserved once flattened.
      *
+     * @private
      * @param {Object} parts
      * @param {Object[]} [items=parts.root]
      * @param {String} [idName=this.itemIdName]
@@ -154,6 +159,7 @@
      * Takes the flat items structure and builds out a map of parent-child elements which gets
      *  stored and used for optimized rendering later.
      *
+     * @private
      * @param {Object[]} items
      */
     _computeParts(items) {
@@ -171,6 +177,7 @@
     /**
      * Used to fetch the parentId if it's available or default back to 'root'.
      *
+     * @private
      * @param {Object} item
      * @param {String} [parentIdName=this.itemParentIdName]
      * @returns {String|Number}

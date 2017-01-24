@@ -6,10 +6,10 @@
   window.hc = window.hc || {};
 
   /**
-   * Use `hc.NestedListBehavior` to implement a flat data structure of nested items into a list with
-   *  children getting added/remove to emulate open/close functionality.
+   * Use `hc.TreeViewBehavior` to implement a tree based around a flat data structure and built on top of
+   *  `hc-nested-list`.
    *
-   * @polymerBehavior hc.NestedListBehavior
+   * @polymerBehavior hc.TreeViewBehavior
    */
   hc.TreeViewBehavior = {
     properties: {
@@ -28,7 +28,11 @@
         type: Array,
         value: () => []
       },
-      /* The parts object used by the list element */
+      /**
+       * The parts object used by the list element
+       *
+       * @private
+       */
       _parts: Object
     },
     listeners: {
