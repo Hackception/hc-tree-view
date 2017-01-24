@@ -26,7 +26,7 @@ Custom property | Description | Default
         <paper-tristate-checkbox
           id="checkbox"
           state="{{item.state}}"
-          value="{{_value}}"
+          value="{{value}}"
           checked="[[checked]]"
           unchecked="[[unchecked]]"
           indeterminate="[[indeterminate]]"
@@ -67,12 +67,8 @@ Custom property | Description | Default
           type: Boolean,
           value: false
         },
-        /**
-         * Holds the value that determines selected status for the item
-         *
-         * @private
-         */
-        _value: {
+        /* Holds the value that determines selected status for the item */
+        value: {
           type: Boolean,
           observer: '_valueChanged'
         },
