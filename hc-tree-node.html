@@ -47,7 +47,7 @@ A node for the tree view, handles the basic node template with proper tristate s
         /* Used to change selected state when checkbox is checked */
         checked: {
           type: Boolean,
-          value: true
+          value: false
         },
         /* Used to change selected state when checkbox is indterminate */
         indeterminate: {
@@ -69,6 +69,7 @@ A node for the tree view, handles the basic node template with proper tristate s
           type: Boolean,
           observer: '_valueChanged'
         },
+        /* Used to determine when this element is in initialization state to prevent extra events */
         __init: {
           type: Boolean,
           value: true
@@ -82,7 +83,7 @@ A node for the tree view, handles the basic node template with proper tristate s
          *  scope.
          */
         this.$.checkbox._regularTap = function(event) {
-          // event.stopPropagation();
+          event.stopPropagation();
           this.state = this.state === 'on' ? 'off' : 'on';
         };
       },

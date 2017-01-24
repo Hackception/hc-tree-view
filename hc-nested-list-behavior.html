@@ -118,11 +118,10 @@
       }
 
       // fetch children and update when done.
-      const self = this;
-      this.fetchChildren(item, parts, parts => {
-        self.set('parts', Object.assign({}, parts));
-        self.isLoading = false;
-      });
+      this.fetchChildren(item, parts, (parts => {
+        this.set('parts', Object.assign({}, parts));
+        this.isLoading = false;
+      }).bind(this));
     },
     /**
      * Takes a parts object and optionally a start point for an array then iterates over the
