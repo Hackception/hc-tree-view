@@ -21,13 +21,17 @@
 
     <script>
       describe('hc-tree-view', () => {
-        const count = 5, parts = {};
-        let element, items, setSpy;
+        const count = 5;
+        let element, items = [], parts = {}, setSpy;
 
         beforeEach(() => {
           items = window.buildItems(count, count, count, parts);
           element = fixture('basic');
           setSpy = sinon.spy(element, 'set');
+        });
+        afterEach(() => {
+          parts = {};
+          items = [];
         });
 
         // Public Functions
@@ -77,6 +81,7 @@
             element.getParent = () => parent;
             element.selectItems = sinon.spy();
             element.deselectItems = sinon.spy();
+            element._updateChildren = sinon.spy();
 
             parent = items[0];
             item = items[1];
@@ -102,23 +107,10 @@
             element.itemStateChanged(null, {item, state});
             expect(parent.state).to.equal(state);
           });
-          it('should update children to match state when state is discrete and hasChildren', () => {
+          it('should not call _updateChildren when item.state is already set', () => {
             const state = 'on';
-            item.hasChildren = true;
-            element.itemStateChanged(null, {item, state});
-            expect(element._parts[item.id].every(child => child.state === state)).to.equal(true);
-            expect(element.selectItems.calledWithMatch(element._parts[item.id])).to.equal(true);
-            expect(element.deselectItems.calledWithMatch(element._parts[item.id])).to.equal(false);
-            element.selectItems.reset();
-            element.itemStateChanged(null, {item, state: 'off'});
-            expect(element.selectItems.calledWithMatch(element._parts[item.id])).to.equal(false);
-            expect(element.deselectItems.calledWithMatch(element._parts[item.id])).to.equal(true);
-          });
-          it('should not update children state to match a state of null', () => {
-            const state = null;
-            item.hasChildren = true;
-            element.itemStateChanged(null, {item, state});
-            expect(element._parts[item.id].every(child => child.state === state)).to.equal(false);
+            item.state = state;
+            expect(element._updateChildren.called).to.equal(false);
           });
         });
         describe('selectItems(items)', () => {
@@ -128,6 +120,50 @@
             element.set.reset();
             element.selectItems(items);
             expect(element.set.calledWithMatch('selectedItems', items)).to.equal(false);
+          });
+        });
+        describe('_updateChildren(item, state, parts)', () => {
+          it('should return an empty array if there are no children or the state is not discrete', () => {
+            expect(element._updateChildren({id: 'foo'}, 'on', {})).to.deep.equal([]);
+            expect(element._updateChildren({id: 'foo'}, null, {foo: [{}]})).to.deep.equal([]);
+          });
+          it('should update the state of all children recursively, and return those children', () => {
+            const item = parts.root[0];
+            const updatedChildren = element._updateChildren(item, 'on', parts);
+            const children = parts[item.id];
+            const gChildren = [];
+            children.forEach(child => gChildren.push(...parts[child.id]));
+            const allChildren = [];
+            allChildren.push(...children);
+            allChildren.push(...gChildren);
+
+            expect(updatedChildren.length).to.equal(allChildren.length);
+
+            updatedChildren.forEach(child => {
+              const index = allChildren.findIndex(i => i.id === child.id);
+              if (index >= 0) allChildren.splice(index, 1);
+            });
+            expect(allChildren.length).to.equal(0);
+          });
+          it('should not return children that did not get updated', () => {
+            const item = parts.root[0];
+            parts[item.id][0].state = 'on';
+            const updatedChildren = element._updateChildren(item, 'on', parts);
+            const children = Object.assign([], parts[item.id]);
+            children.shift();
+            const gChildren = [];
+            children.forEach(child => gChildren.push(...parts[child.id]));
+            const allChildren = [];
+            allChildren.push(...children);
+            allChildren.push(...gChildren);
+
+            expect(updatedChildren.length).to.equal(allChildren.length);
+
+            updatedChildren.forEach(child => {
+              const index = allChildren.findIndex(i => i.id === child.id);
+              if (index >= 0) allChildren.splice(index, 1);
+            });
+            expect(allChildren.length).to.equal(0);
           });
         });
       });

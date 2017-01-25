@@ -26,7 +26,8 @@
       /* The list of all selected items without duplicates */
       selectedItems: {
         type: Array,
-        value: () => []
+        value: () => [],
+        notify: true
       },
       /**
        * The parts object used by the list element
@@ -86,6 +87,9 @@
     itemStateChanged(event, detail) {
       const {item, state} = detail;
 
+      // Reject duplicated events
+      if (item.state === state) return;
+
       // Update up the chain (parents)
       const parent = this.getParent(item);
 
@@ -94,22 +98,16 @@
         const prevState = parent.state;
 
         // If all of the siblings share the same state then set it for the parent, otherwise it's indeterminate
-        const newState = siblings.every(i => (i[this.itemIdName] === item[this.itemIdName] || i.state === state)) ?
+        const newState = siblings.every(
+          i => (i[this.itemIdName] === item[this.itemIdName] || i.state === state)) ?
           state : null;
 
         // If there's a change, update
         if (prevState !== newState) parent.state = newState;
       }
 
-      // Update down the chain (children) as long as the state changed to a discrete value (on|off)
-      if (item.hasChildren && state) {
-        const children = this._parts[item[this.itemIdName]];
-        children.forEach(child => {
-          if (child.state !== state) child.state = state;
-        });
-        // Change selected status for children, even if they are hidden.
-        this[state === 'on' ? 'selectItems' : 'deselectItems'](children);
-      }
+      // Change selected status for children, even if they are hidden.
+      this[state === 'on' ? 'selectItems' : 'deselectItems'](this._updateChildren(item, state));
     },
     /**
      * Takes an array of one or more items adds them to the selectedItems array, preventing duplicates.
@@ -122,10 +120,36 @@
       items.forEach(item => selectedSet.add(item));
 
       // Update selectedItems with an array version if an item was added
-      const selectedItems = Array.from(selectedSet);
-      if (this.selectedItems.length !== selectedItems.length)
-        this.set('selectedItems', selectedItems);
-    }
+      if (this.selectedItems.length !== selectedSet.size)
+        this.set('selectedItems', Array.from(selectedSet));
+    },
+    /**
+     * Updates the state on all children for the given item, returning the items that were updated.
+     *
+     * @private
+     * @param {Object} item
+     * @param {Boolean} state
+     * @param {Object} [parts = this._parts]
+     * @returns {Array.<Object>}
+     */
+    _updateChildren(item, state, parts = this._parts) {
+      const children = parts[item[this.itemIdName]];
+      if (!children || !state) return [];
+
+      const updatedChildren = [];
+
+      for (let i = 0; i < children.length; i++) {
+        const child = children[i];
+        // Only update the children if the state actually changes.
+        if (child.state !== state) {
+          child.state = state;
+          updatedChildren.push(children[i]);
+          updatedChildren.push(...this._updateChildren(child, state, parts));
+        }
+      }
+
+      return updatedChildren;
+    },
   };
 
   /**

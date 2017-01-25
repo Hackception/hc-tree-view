@@ -37,13 +37,9 @@
                   items: {
                     type: Array,
                     // This function is provided as part of test/utils.html, used for testing
-                    value: () => window.buildItems(100, 100, 100)
+                    value: () => window.buildItems(10, 100, 100)
                   },
                   selectedItems: Array
-                },
-                observers: ['_log(selectedItems, selectedItems.splices)'],
-                _log(a) {
-                  console.log('_log', a);
                 }
               });
             </script>

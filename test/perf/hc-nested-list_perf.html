@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, minimum-scale=1, initial-scale=1, user-scalable=yes">
 
-    <title>hc-nested-list test</title>
+    <title>hc-nested-list perf tests</title>
 
     <script src="../../../webcomponentsjs/webcomponents-lite.js"></script>
     <script src="../../../web-component-tester/browser.js"></script>
@@ -147,8 +147,8 @@
 
         // TODO: Come back and optimize for the larger cases to acceptable limits
         describe.skip('with 1mil items', () => runTests(100, 100, 100, 30));
-        describe.skip('with 100k items', () => runTests(100, 100, 10, 15));
-        describe('with 10k items', () => runTests(100, 10, 10));
+        describe.skip('with 100k items', () => runTests(10, 100, 100, 15));
+        describe('with 10k items', () => runTests(10, 10, 100));
         describe('with worst-case flat (10k nodes at one level)', () => runTests(10000, 0, 0));
       });
     </script>
