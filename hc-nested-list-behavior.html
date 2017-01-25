@@ -103,13 +103,13 @@
      * @param {CustomEvent} [event]
      * @param {Object} detail
      * @param {String} [idName=this.itemIdName]
+     * @param {Object} [parts = this.parts]
      */
-    itemOpenChanged(event, detail, idName = this.itemIdName) {
+    itemOpenChanged(event, detail, idName = this.itemIdName, parts = this.parts) {
       // Block interactions while loading items
       if (this.isLoading) return;
       this.isLoading = true;
 
-      const parts = Object.assign({}, this.parts);
       const items = parts[this._getParentId(detail.item)];
       const id = detail.item[idName];
       let item;
@@ -180,7 +180,7 @@
         parts[parentId].push(Object.assign({
           open: false,
           state: 'off',
-          depth: this._getItemDepth(item, parts)
+          depth: this._getItemDepth(item, parts, parentId)
         }, item));
       });
 
@@ -193,11 +193,11 @@
      * @private
      * @param {Object} item
      * @param {Object} parts
+     * @param {String} [parentId = this._getParentId(item)]
      * @returns {Number|undefined}
      */
-    _getItemDepth(item, parts) {
+    _getItemDepth(item, parts, parentId = this._getParentId(item)) {
       const parent = this.getParent(item, parts);
-      const parentId = this._getParentId(item);
       let depth;
 
       // You're a root node
