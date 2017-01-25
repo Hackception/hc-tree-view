@@ -18,6 +18,14 @@ Custom property | Description | Default
     <style>
       :host {
         display: block;
+
+        @apply --hc-tree-view;
+      }
+      #list {
+        @apply --hc-tree-view-list;
+      }
+      .item {
+        @apply --hc-tree-view-item;
       }
     </style>
 
@@ -29,7 +37,10 @@ Custom property | Description | Default
       item-parent-id-name="[[itemParentIdName]]"
       >
       <template>
-        <hc-tree-node item="{{item}}"></hc-tree-node>
+        <hc-tree-node
+          class="item"
+          item="{{item}}"
+        ></hc-tree-node>
       </template>
     </hc-nested-list>
   </template>

@@ -1,5 +1,7 @@
 
 <script>
+  const frame = 16;
+
   /**
    * Takes in the number of parent items, child items, and grand child items then builds out
    *  a flat array of items for testing.  Optionally you can pass in a parts object to get populated
@@ -59,5 +61,37 @@
     }
 
     return items;
+  }
+  /**
+   * Runs the setupFnc followed by monitoring timing on the fnc for iterations, returns statistics.
+   *
+   * @param {Function} fnc
+   * @param {Function} [setupFnc]
+   * @param {Number} [iterations = 50]
+   */
+  function getPerformance(fnc, setupFnc, iterations = 50) {
+    // Run the setup function outside the timing
+    if (setupFnc) setupFnc();
+
+    const values = [];
+
+    for (let i = 0; i < iterations; i++) {
+      const start = performance.now();
+      fnc();
+      values.push(performance.now() - start);
+    }
+
+    let max = 0, min = 999;
+    const avg = values.reduce((a, b) => {
+      max = Math.max(b, max);
+      min = Math.min(b, min);
+      return a + b;
+    }, 0) / iterations;
+
+    return {
+      avg: Math.round(avg),
+      max: Math.round(max),
+      min: Math.round(min)
+    };
   }
 </script>

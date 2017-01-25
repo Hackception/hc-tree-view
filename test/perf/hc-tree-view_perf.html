@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, minimum-scale=1, initial-scale=1, user-scalable=yes">
+
+    <title>hc-tree-view perf tests</title>
+
+    <script src="../../../webcomponentsjs/webcomponents-lite.js"></script>
+    <script src="../../../web-component-tester/browser.js"></script>
+
+    <link rel="import" href="../utils.html">
+    <link rel="import" href="../../hc-tree-view.html">
+  </head>
+  <body>
+    <test-fixture id="basic">
+      <template>
+        <hc-tree-view></hc-tree-view>
+      </template>
+    </test-fixture>
+
+    <script>
+      describe('[perf]hc-nested-list', () => {
+        let parts = {}, items = [];
+
+        function runTests(pSize, cSize, gcSize, modifier = 1) {
+          beforeEach(() => items = window.buildItems(pSize, cSize, gcSize, parts));
+
+          // deselectItems
+          it('should deselect an item in <1ms', () =>
+            expect(getPerformance(
+              () => element.deselectItems([parts.root[0]]),
+              () => element.selectItems([parts.root[0]])
+            ).avg).at.most(1));
+          it('should deselect all items in <1 frame', () =>
+            expect(getPerformance(
+              () => element.deselectItems(items),
+              () => element.selectItems(items)
+            ).avg).at.most(frame));
+          // itemStateChanged
+          it('should update children state in <1ms', () => {
+            const parent = parts.root[0];
+            const event = {
+              detail: {
+                item: parent,
+                state: 'on'
+              }
+            }
+            element._parts = parts;
+            expect(getPerformance(() => element.itemStateChanged(event, event.detail)).avg).at.most(1);
+          });
+          it('should update parent and child state in <1ms', () => {
+            const parent = parts.root[0];
+            const children = parts[parent.id] || [];
+            const child = children[0];
+            const event = {
+              detail: {
+                item: child || parent,
+                state: 'on'
+              }
+            }
+            element._parts = parts;
+            expect(getPerformance(() => element.itemStateChanged(event, event.detail)).avg).at.most(1);
+          });
+          it('should update parent state in <1ms', () => {
+            const parent = parts.root[0];
+            const children = parts[parent.id] || [];
+            const child = children[0];
+            const gChildren = parts[(child || {}).id] || [];
+            const gChild = gChildren[0];
+            const event = {
+              detail: {
+                item: gChild || child || parent,
+                state: 'on'
+              }
+            }
+            element._parts = parts;
+            expect(getPerformance(() => element.itemStateChanged(event, event.detail)).avg).at.most(1);
+          });
+          // selectItems
+          it('should select an item in <1ms', () =>
+            expect(getPerformance(
+              () => element.selectItems([parts.root[0]]),
+              () => element.deselectItems([parts.root[0]])
+            ).avg).at.most(1));
+          it('should select all items in <1 frame', () =>
+            expect(getPerformance(
+              () => element.selectItems(items),
+              () => element.deselectItems(items)
+            ).avg).at.most(frame));
+        }
+
+        beforeEach(() => element = fixture('basic'));
+        afterEach(() => {
+          parts = {};
+          items = [];
+        });
+
+        // TODO: Come back and optimize for the larger cases to acceptable limits
+        describe.skip('with 1mil items', () => runTests(100, 100, 100));
+        describe('with 100k items', () => runTests(10, 100, 100));
+        describe('with 10k items', () => runTests(10, 10, 100));
+        describe('with worst-case flat (10k nodes at one level)', () => runTests(10000, 0, 0));
+      });
+    </script>
+  </body>
+</html>

@@ -30,7 +30,7 @@
     <script>
       describe('hc-nested-list', () => {
         const count = 5;
-        let element, items, parts;
+        let element, items, parts, setSpy;
 
         beforeEach(() => {
           // Triggers a clean build of items and parts every time.
@@ -38,7 +38,7 @@
           items = window.buildItems(count, count, count, parts);
 
           element = fixture('basic');
-          element.set = sinon.spy();
+          setSpy = sinon.spy(element, 'set');
         });
 
         // Public Functions
@@ -55,6 +55,7 @@
         });
         describe('getParent(item)', () => {
           beforeEach(() => {
+            element._computeParts = () => {};
             element.items = items;
             element.parts = parts;
           });
@@ -74,6 +75,7 @@
               open: true
             };
             fetchChildrenSpy = sinon.spy(element, 'fetchChildren');
+            element._computeItems = () => {};
           });
 
           it('should update the open state for the item', () => {
@@ -109,6 +111,8 @@
         });
         // Private Functions
         describe('_computeItems(parts)', () => {
+          beforeEach(() => element._getItemDepth = () => 1);
+
           it('should turn a parts object into an array', () =>
             expect(element._computeItems(parts)).to.deep.equal(parts.root));
           it('should nest children after the parent when parent is open', () => {
@@ -141,19 +145,54 @@
             element.parts = {};
             expect(element._computeItems.calledOnce).to.equal(true);
           });
-          it('should set hasChildren property if the item has children', () =>
-            expect(element._computeItems(parts)[0].hasChildren).to.equal(true));
+          it('should update hasChildren and depth', () => {
+            const item = element._computeItems(parts)[0];
+            expect(item.hasChildren).to.equal(true);
+            expect(item.depth).to.equal(1);
+          });
         });
         describe('_computeParts(items)', () => {
+          beforeEach(() => element._getItemDepth = () => 1);
+
           it('should turn an array of items into a map based on the parentId', () => {
             element._computeParts(items);
-            expect(element.set.calledWith('parts', parts)).to.equal(true);
+            expect(element.set.calledWith('parts')).to.equal(true);
+            expect(element.parts.root.length).to.equal(parts.root.length);
+            expect(Object.keys(element.parts)).to.deep.equal(Object.keys(parts));
           });
           it('should be called whne items is updated', () => {
             element._computeParts = sinon.spy();
             element.items = [];
             expect(element._computeParts.calledOnce).to.equal(true);
           });
+          it('should add base properties for the items', () => {
+            element._computeParts(items);
+            const parent = element.parts.root[0];
+            const child = element.parts[parent.id][0];
+            const gChild = element.parts[child.id][0];
+
+            expect(parent.open).to.equal(false);
+            expect(parent.state).to.equal('off');
+            expect(parent.depth).to.equal(1);
+          });
+        });
+        describe('_getItemDepth(item, parts)', () => {
+          let parent, child;
+
+          beforeEach(() => {
+            parent = parts.root[0];
+            child = parts[parent.id][0];
+
+            element.getParent = item => item.id === child.id ? parent : undefined;
+            element._getParentId = item => typeof item.parentId === 'undefined' ? 'root' : item.parentId;
+          });
+
+          it('should return 0 for root level items', () =>
+            expect(element._getItemDepth(parent, parts)).to.equal(0));
+          it('should return undefined when the items parent does not exist', () =>
+            expect(element._getItemDepth({parentId: 'foo'}, parts)).to.equal(undefined));
+          it('should return the depth if the parent chain is complete', () =>
+            expect(element._getItemDepth(child, parts)).to.equal(1));
         });
         describe('_getParentId(item)', () => {
           it('should return item.parentId when it is truthy', () =>

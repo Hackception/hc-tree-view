@@ -79,6 +79,12 @@
           });
         });
         // Private Functions
+        describe('_getIcon(open)', () => {
+          it('should return openIcon when open is true', () =>
+            expect(element._getIcon(true)).to.equal(element.openIcon));
+          it('should return closedIcon when open is false', () =>
+            expect(element._getIcon(false)).to.equal(element.closedIcon));
+        });
         describe('_stateChanged(event, detail)', () => {
           const event = {};
 
