@@ -16,6 +16,7 @@ Custom property | Description | Default
 `--hc-tree-node-icon` | A mixin to style the icon | {}
 `--hc-tree-node-icon-open` | A mixin to style the icon when open | {}
 `--hc-tree-node-icon-closed` | A mixin to style the icon when closed | {}
+`--hc-tree-node-icon-hidden` | A mixin for styling the icon when it is invisible | {}
 `--hc-tree-node-label` | A mixin to style the label | {}
 `--hc-tree-node-padding` | The amount of padding to use for each layer of depth added | 25px
 
@@ -42,6 +43,12 @@ Custom property | Description | Default
       #icon:not([open]) {
         @apply --hc-tree-node-icon-closed;
       }
+      #icon:not([visible]) {
+        visibility: hidden;
+        width: 0;
+
+        @apply --hc-tree-node-icon-hidden;
+      }
       #label {
         @apply --hc-tree-node-label;
       }
@@ -64,6 +71,7 @@ Custom property | Description | Default
           id="icon"
           icon="[[_getIcon(item.open)]]"
           open$="[[item.open]]"
+          visible$="[[item.hasChildren]]"
         ></iron-icon>
       </slot>
       <slot name="label">
