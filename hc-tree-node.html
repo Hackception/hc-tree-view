@@ -26,7 +26,6 @@ Custom property | Description | Default
     <style>
       :host {
         display: block;
-        height: 24px;
         padding-left: calc(var(--hc-tree-node-depth, 0) * var(--hc-tree-node-padding, 25px)) !important;
 
         @apply --hc-tree-node;
@@ -42,6 +41,12 @@ Custom property | Description | Default
       }
       #icon:not([open]) {
         @apply --hc-tree-node-icon-closed;
+      }
+      #icon:not([visible]) {
+        visibility: hidden;
+        width: 0;
+
+        @apply --hc-tree-node-icon-hidden;
       }
       #label {
         @apply --hc-tree-node-label;
@@ -65,7 +70,7 @@ Custom property | Description | Default
           id="icon"
           icon="[[_getIcon(item.open)]]"
           open$="[[item.open]]"
-          hidden$="[[!item.hasChildren]]"
+          visible$="[[item.hasChildren]]"
         ></iron-icon>
       </slot>
       <slot name="label">
