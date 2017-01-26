@@ -108,6 +108,7 @@
 
       // Change selected status for children, even if they are hidden.
       this[state === 'on' ? 'selectItems' : 'deselectItems'](this._updateChildren(item, state));
+      this.set('_parts', Object.assign({}, this._parts));
     },
     /**
      * Takes an array of one or more items adds them to the selectedItems array, preventing duplicates.

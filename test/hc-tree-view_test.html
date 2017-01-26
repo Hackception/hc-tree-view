@@ -112,6 +112,12 @@
             item.state = state;
             expect(element._updateChildren.called).to.equal(false);
           });
+          it('should update _parts', () => {
+            const state = 'on';
+            element.itemStateChanged(null, {item, state});
+            expect(setSpy.calledOnce).to.equal(true);
+            expect(setSpy.calledWithMatch('_parts', parts)).to.equal(true);
+          });
         });
         describe('selectItems(items)', () => {
           it('should add all items in items to selectedItems without duplicates', () => {
