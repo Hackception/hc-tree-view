@@ -1,0 +1,22 @@
+language: node_js
+sudo: required
+before_script:
+  - npm install -g bower polylint web-component-tester
+  - bower install
+  - polylint
+node_js: '6'
+addons:
+  sauce_connect:
+    username: stramel
+  jwt:
+    secure: ISMp9kc6jU9lOK68uVv8cYbOIwRCBjJOsJh1iqvSDoGbnAoFz/a28bz6VF6iqPIyrjxAKPyUiebqYztH7N+PGnGn+VZwNy1b830UzocXMvEimoHuRxrzYYvcT5t8xhZcWKzOLZ/vnomV6LThi+Ke6KR+ie934XCm2VD4Gv312dOOjTwrV+2kIq9y+4DSuZ6F4B6vgf7tkkDG+YM0CYQnvKO+mnp89u8/lWwAzKSOoNufZswDll6ai4sLKDP4dht/rR54GrHXOZ90wS+qrjLVBmyIqrgt/JAtKsA5FtS287YwJW/5S1J1zQt3GiJgESMjgb4CcA3bJjSNuSCH1oiBr7j7heqfmcTH6PuyzeMIWl3qoWWIbzLu1xkv3W/gCKxFo53bCSVIqBQ6uxMomX0/i/bfVVyd+5nSOEOUmoLLh6AlfSRsIUZcuChKw/ag5HW1Xv1khNMYglhLO4MgvIKMsjEbt8vUsp1GpmigFhHPLo5143iB8czHn45W/7OZP9pJGbTaaOsnxUeuABdi5OyPylPeDTdpNJcxK6uTH0Y7xUhT+XPrE+oDItXPbzdpipOPVszrDrACmxG7pqBraTKQHoYoq85ZcAs0mtt/P5KdpcQWF5LZSWDuQy3N0pcpTV4zTNNZWx9v56dgKsih7oagq+peB2eGHaPKkBPG/tTvx9Y=
+  firefox: latest
+  apt:
+    sources:
+      - google-chrome
+    packages:
+      - google-chrome-stable
+script:
+  - xvfb-run wct
+  - 'if [ "${TRAVIS_PULL_REQUEST}" = "false" ]; then wct -s ''default''; fi'
+dist: trusty

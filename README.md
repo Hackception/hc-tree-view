@@ -1,6 +1,10 @@
-# \<hc-tree-view\>
+# \<hc-tree-view\>  [![Travis](https://img.shields.io/travis/rust-lang/rust.svg?style=flat-square)](https://github.com/Hackception/hc-tree-view/)
 
 An optimized tree-view based on a flat data structure.
+
+## Browser Support
+
+[![Build Status](https://saucelabs.com/browser-matrix/stramel.svg)](https://saucelabs.com/beta/builds/556b2791a7da4a9397951969625607be)
 
 ## Install the Polymer-CLI
 
