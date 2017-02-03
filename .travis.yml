@@ -1,5 +1,7 @@
 language: node_js
 sudo: required
+git:
+  depth: 3
 before_script:
   - npm install -g bower polylint web-component-tester
   - bower install
