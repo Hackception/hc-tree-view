@@ -43,9 +43,10 @@
     /**
      * Takes an array of one or more items and removes them from the selectedItems array.
      *
-     * @param {Array.<Object>} items
+     * @param {Array.<Object>} [items = this.selectedItems]
+     * @param {Boolean} [preventUpdate] - blocks the call to _updateState to block template updating
      */
-    deselectItems(items) {
+    deselectItems(items = this.selectedItems, preventUpdate) {
       const selectedItems = Object.assign([], this.selectedItems);
       items.forEach(item => {
         const index = selectedItems.findIndex(i => i[this.itemIdName] === item[this.itemIdName]);
@@ -55,8 +56,10 @@
       });
 
       // Update selectedItems if there was an item removed
-      if (this.selectedItems.length !== selectedItems.length)
+      if (this.selectedItems.length !== selectedItems.length) {
         this.set('selectedItems', selectedItems);
+        if (!preventUpdate) this._updateState(items, 'off');
+      }
     },
     /**
      * Fetches the parent for the given item.
@@ -75,7 +78,7 @@
      * @param {Object} detail
      */
     itemSelectedChanged(event, detail) {
-      this[detail.selected ? 'selectItems' : 'deselectItems']([detail.item]);
+      this[detail.selected ? 'selectItems' : 'deselectItems']([detail.item], true);
     },
     /**
      * Updates the parents and children of this item that it's state was changed, update thiers as well if needed.
@@ -89,40 +92,33 @@
 
       // Reject duplicated events
       if (item.state === state) return;
+      item.state = state;
 
-      // Update up the chain (parents)
-      const parent = this.getParent(item);
-
-      if (parent) {
-        const siblings = this._parts[parent[this.itemIdName]];
-        const prevState = parent.state;
-
-        // If all of the siblings share the same state then set it for the parent, otherwise it's indeterminate
-        const newState = siblings.every(
-          i => (i[this.itemIdName] === item[this.itemIdName] || i.state === state)) ?
-          state : null;
-
-        // If there's a change, update
-        if (prevState !== newState) parent.state = newState;
-      }
+      // Change selected status for parents up the chain
+      this._updateParents(item, state);
 
       // Change selected status for children, even if they are hidden.
-      this[state === 'on' ? 'selectItems' : 'deselectItems'](this._updateChildren(item, state));
-      this.set('_parts', Object.assign({}, this._parts));
+      this[state === 'on' ? 'selectItems' : 'deselectItems'](this._updateChildren(item, state), true);
+      this.debounce('itemStateChanged', () => {
+        this.set('_parts', Object.assign({}, this._parts));
+      });
     },
     /**
      * Takes an array of one or more items adds them to the selectedItems array, preventing duplicates.
      *
      * @param {Array.<Object>} items
+     * @param {Boolean} [preventUpdate] - blocks the call to _updateState to block template updating
      */
-    selectItems(items) {
+    selectItems(items, preventUpdate) {
       // Add all of the items to the selectedItems as a set
       const selectedSet = new Set(this.selectedItems);
       items.forEach(item => selectedSet.add(item));
 
       // Update selectedItems with an array version if an item was added
-      if (this.selectedItems.length !== selectedSet.size)
+      if (this.selectedItems.length !== selectedSet.size) {
         this.set('selectedItems', Array.from(selectedSet));
+        if (!preventUpdate) this._updateState(items, 'on');
+      }
     },
     /**
      * Updates the state on all children for the given item, returning the items that were updated.
@@ -151,6 +147,58 @@
 
       return updatedChildren;
     },
+    /**
+     * Updates the state on the parent for the given item and all of it's parents.
+     *
+     * @private
+     * @param {Object} item
+     * @param {Boolean} state
+     * @param {Object} [parts = this._parts]
+     */
+    _updateParents(item, state, parts = this._parts) {
+      // Update up the chain (parents)
+      const parent = this.getParent(item);
+
+      if (parent && parent.state !== state) {
+        const siblings = parts[parent[this.itemIdName]];
+        const prevState = parent.state;
+
+        // If all of the siblings share the same state then set it for the parent, otherwise it's indeterminate
+        const newState = siblings.every(
+          i => (i[this.itemIdName] === item[this.itemIdName] || i.state === state)) ?
+          state : null;
+
+        // If there's a change, update
+        if (prevState !== newState) {
+          parent.state = newState;
+          this._updateParents(parent, state, parts);
+        }
+      }
+    },
+    /**
+     * Takes a list of items and updates their state in parts.
+     *
+     * @private
+     * @param {Array.<Object>} items
+     * @param {String} state
+     * @param {Object} [parts = this._parts]
+     */
+    _updateState(items, state, parts = this._parts) {
+      const updatedItems = items.
+        // Filter items to remove children that have a parent in the array
+        filter(item => !items.some(i => i[this.itemIdName] === item[this.itemParentIdName])).
+        // Pass the filtered items into _updateChildren
+        forEach(item => {
+          // Find the item in the parts object
+          const parentId = this.$.list._getParentId(item);
+          const partItem = parts[parentId].find(i => i[this.itemIdName] === item[this.itemIdName]);
+          // Trigger a state change that will propagate
+          this.itemStateChanged(null, {
+            item: partItem,
+            state
+          });
+        });
+    }
   };
 
   /**

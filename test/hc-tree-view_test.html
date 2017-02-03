@@ -36,11 +36,25 @@
 
         // Public Functions
         describe('deselectItems(items)', () => {
+          beforeEach(() => element._updateState = sinon.spy());
+
           it('should remove all items in items from selectedItems', () => {
             const item = {test: 'test'};
             element.selectedItems = [item];
             element.deselectItems([item]);
             expect(element.set.calledWithMatch('selectedItems', [])).to.equal(true);
+          });
+          it('should call _updateState when !preventUpdate', () => {
+            const item = {test: 'test'};
+            element.selectedItems = [item];
+            element.deselectItems([item]);
+            expect(element._updateState.calledWithMatch([item], 'off')).to.equal(true);
+          });
+          it('should not call _updateState when preventUpdate', () => {
+            const item = {test: 'test'};
+            element.selectedItems = [item];
+            element.deselectItems([item], true);
+            expect(element._updateState.called).to.equal(false);
           });
           it('should not update selectedItems if no items were removed', () => {
             element.deselectItems([]);
@@ -64,68 +78,88 @@
 
           it('should call selectItems with the item when detail.selected', () => {
             element.itemSelectedChanged(null, {item, selected: true});
-            expect(element.selectItems.calledWithMatch([item])).to.equal(true);
-            expect(element.deselectItems.calledWithMatch([item])).to.equal(false);
+            expect(element.selectItems.calledWithMatch([item], true)).to.equal(true);
+            expect(element.deselectItems.calledWithMatch([item], true)).to.equal(false);
           });
           it('should call deselectItems with the item when detail.selected', () => {
             element.itemSelectedChanged(null, {item, selected: false});
-            expect(element.selectItems.calledWithMatch([item])).to.equal(false);
-            expect(element.deselectItems.calledWithMatch([item])).to.equal(true);
+            expect(element.selectItems.calledWithMatch([item], true)).to.equal(false);
+            expect(element.deselectItems.calledWithMatch([item], true)).to.equal(true);
           });
         });
         describe('itemStateChanged(event, detail)', () => {
-          let children, item, parent;
+          let item, spy;
 
           beforeEach(() => {
+            spy = sinon.spy(element, 'debounce');
             element.$.list._computeItems = () => {};
-            element.getParent = () => parent;
             element.selectItems = sinon.spy();
             element.deselectItems = sinon.spy();
-            element._updateChildren = sinon.spy();
-
-            parent = items[0];
+            element._updateParts = sinon.spy();
+            element._updateParents = sinon.spy();
+            element._updateChildren = sinon.stub();
+            element._updateChildren.returns([{test: 'test'}]);
             item = items[1];
-            children = parts[parent.id];
-            element._parts = parts;
-            parent.state = 'off';
           });
 
-          it('should set the item parent state to detail.state if all siblings are detail.state', () => {
-            const state = 'on';
-            children.forEach(item => item.state = state);
-            element.itemStateChanged(null, {item, state});
-            expect(parent.state).to.equal(state);
-          });
-          it('should set parent state to null when children do not agree', () => {
-            const state = 'on';
-            element.itemStateChanged(null, {item, state});
-            expect(parent.state).to.equal(null);
-          });
-          it('should not update item parent state when there is no change', () => {
-            const state = 'off';
-            children.forEach(item => item.state = state);
-            element.itemStateChanged(null, {item, state});
-            expect(parent.state).to.equal(state);
-          });
           it('should not call _updateChildren when item.state is already set', () => {
             const state = 'on';
             item.state = state;
             expect(element._updateChildren.called).to.equal(false);
           });
-          it('should update _parts', () => {
+          it('should update item state', () => {
             const state = 'on';
             element.itemStateChanged(null, {item, state});
-            expect(setSpy.calledOnce).to.equal(true);
-            expect(setSpy.calledWithMatch('_parts', parts)).to.equal(true);
+            expect(item.state).to.equal(state);
+          });
+          it('should call _updateParents', () => {
+            const state = 'on';
+            element.itemStateChanged(null, {item, state});
+            expect(element._updateParents.calledWithMatch(item, state)).to.equal(true);
+          });
+          it('should call selectItems when state is changed to "on"', () => {
+            const state = 'on';
+            element.itemStateChanged(null, {item, state});
+            expect(element.selectItems.calledWithMatch([{test: 'test'}], true)).to.equal(true);
+          });
+          it('should call deselectItems when state is changed to !"on"', () => {
+            const state = 'off';
+            item.state = 'on';
+            element.itemStateChanged(null, {item, state});
+            expect(element.deselectItems.calledWithMatch([{test: 'test'}], true)).to.equal(true);
+          });
+          it('should debounce', () => {
+            const state = 'on';
+            element.itemStateChanged(null, {item, state});
+            expect(element.debounce.calledOnce).to.equal(true);
+          })
+          it('should set _parts', done => {
+            const state = 'on';
+            element._parts = parts;
+            element.itemStateChanged(null, {item, state});
+            flush(() => {
+              expect(setSpy.calledWithMatch('_parts', parts)).to.equal(true);
+              done();
+            });
           });
         });
         describe('selectItems(items)', () => {
+          beforeEach(() => element._updateState = sinon.spy());
+
           it('should add all items in items to selectedItems without duplicates', () => {
             element.selectItems(items);
             expect(element.set.calledWithMatch('selectedItems', items)).to.equal(true);
             element.set.reset();
             element.selectItems(items);
             expect(element.set.calledWithMatch('selectedItems', items)).to.equal(false);
+          });
+          it('should call _updateState when !preventUpdate', () => {
+            element.selectItems(items);
+            expect(element._updateState.calledWithMatch(items, 'on')).to.equal(true);
+          });
+          it('should not call _updateState when preventUpdate', () => {
+            element.selectItems(items, true);
+            expect(element._updateState.called).to.equal(false);
           });
         });
         describe('_updateChildren(item, state, parts)', () => {
@@ -170,6 +204,57 @@
               if (index >= 0) allChildren.splice(index, 1);
             });
             expect(allChildren.length).to.equal(0);
+          });
+        });
+        describe('_updateParents(item, state)', () => {
+          const state = 'on';
+          let children, item, parent, spy;
+
+          beforeEach(() => {
+            spy = sinon.spy(element, '_updateParents');
+            element.getParent = () => parent;
+            parent = parts.root[0];
+            item = parts[parent.id][0];
+            children = parts[parent.id];
+            element._parts = parts;
+            parent.state = 'off';
+          });
+
+          it('should set parent.state to state if all siblings are set to state', () => {
+            parts[parent.id].forEach(item => item.state = state);
+            element._updateParents(item, state, parts);
+            expect(parent.state).to.equal(state);
+          });
+          it('should set parent.state to null when children do not agree', () => {
+            element._updateParents(item, state, parts);
+            expect(parent.state).to.equal(null);
+          });
+          it('should call _updateParents when parent.state is changed', () => {
+            element._updateParents(item, state, parts);
+            expect(spy.callCount).to.equal(2);
+          });
+          it('should not update parent.state when there is no change', () => {
+            parent.state = state;
+            element._updateParents(item, state, parts);
+            expect(parent.state).to.equal(state);
+          });
+        });
+        describe('_updateState(items, state, parts)', () => {
+          const state = 'on';
+
+          beforeEach(() => {
+            element.itemStateChanged = sinon.spy();
+            element.$.list.parts = parts;
+          });
+
+          it('should call _updateChildren all items that do not have a parent in items', () => {
+            const subItems = [parts.root[0], parts[parts.root[0].id][0], parts[parts.root[1].id][0]];
+            element._updateState(subItems, state, parts);
+            expect(element.itemStateChanged.callCount).to.equal(2);
+            expect(element.itemStateChanged.calledWithMatch(null, {item: subItems[0], state})).
+              to.equal(true);
+            expect(element.itemStateChanged.calledWithMatch(null, {item: subItems[2], state})).
+              to.equal(true);
           });
         });
       });

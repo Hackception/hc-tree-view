@@ -25,7 +25,11 @@
 
           <dom-module id="hc-tree-view-demo">
             <template>
+              <button on-click="selectRootItem">Select Root Item</button>
+              <button on-click="selectLeafItem">Select Leaf Item</button>
+              <button on-click="deselectItems">Deselect Items</button>
               <hc-tree-view
+                id="tree"
                 items="{{items}}"
                 selected-items="{{selectedItems}}"
               ></hc-tree-view>
@@ -40,6 +44,18 @@
                     value: () => window.buildItems(10, 10, 100)
                   },
                   selectedItems: Array
+                },
+                deselectItems() {
+                  this.$.tree.deselectItems();
+                },
+                selectLeafItem() {
+                  const rootItem = this.$.tree._parts.root[0];
+                  const childItem = this.$.tree._parts[rootItem.id][0];
+                  const leafItem = this.$.tree._parts[childItem.id][0];
+                  this.$.tree.selectItems([leafItem]);
+                },
+                selectRootItem() {
+                  this.$.tree.selectItems([this.$.tree._parts.root[0]]);
                 }
               });
             </script>
