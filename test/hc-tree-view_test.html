@@ -46,6 +46,12 @@
             element.deselectItems([]);
             expect(element.set.called).to.equal(false);
           });
+          it('should remove all items when called with no arguments', () => {
+            const item = {test: 'test'};
+            element.selectedItems = [item];
+            element.deselectItems();
+            expect(element.set.calledWithMatch('selectedItems', [])).to.equal(true);
+          });
         });
         describe('getParent(item)', () => {
           it('should call getParent on the list', () => {

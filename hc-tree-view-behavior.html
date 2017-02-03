@@ -45,7 +45,7 @@
      *
      * @param {Array.<Object>} items
      */
-    deselectItems(items) {
+    deselectItems(items = this.selectedItems) {
       const selectedItems = Object.assign([], this.selectedItems);
       items.forEach(item => {
         const index = selectedItems.findIndex(i => i[this.itemIdName] === item[this.itemIdName]);
