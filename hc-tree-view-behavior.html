@@ -43,9 +43,9 @@
     /**
      * Takes an array of one or more items and removes them from the selectedItems array.
      *
-     * @param {Array.<Object>} items
+     * @param {Array.<Object>} [items=selectedItems]
      */
-    deselectItems(items) {
+    deselectItems(items = this.selectedItems) {
       const selectedItems = Object.assign([], this.selectedItems);
       items.forEach(item => {
         const index = selectedItems.findIndex(i => i[this.itemIdName] === item[this.itemIdName]);
