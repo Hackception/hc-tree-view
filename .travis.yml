@@ -4,14 +4,12 @@ before_script:
   - npm install -g bower polylint web-component-tester
   - bower install
   - polylint
-env:
-  global:
-    - secure: >-
-        Hg2KIEhKqOw0J8ZW2C3Pdgp5N4HD/f9jhdluH0tiYRCU4I/jf5grQuA3ohqsbqnJKV5l06gWVIDCdxBDwDEH0h8v9uUG5z/i2diiuLQc94SLQu8kWKkUPDOx+pUyXmfRKj6KnaRTotTLFrwlyuKDi9OfGjQbLZWTvmJUWoFwh4g=
-    - secure: >-
-        U6/Hp/V0ezT/yxeP2bv4S99LSLScKEaOfYwQUbe0+v5dPbN5XZaCUS6iSbNP2K8Mtb1UQUEyL8uN6Zn+khFlJ8/KJshppJ6HJi235CykahBhh9/Cv7EapgDUoss14ntE8EKpm6Ijo4LvVyPVmhgqKk9wP5ykDFtvhoKD4C3guVU=
 node_js: '6'
 addons:
+  sauce_connect:
+    username: stramel
+  jwt:
+    secure: ISMp9kc6jU9lOK68uVv8cYbOIwRCBjJOsJh1iqvSDoGbnAoFz/a28bz6VF6iqPIyrjxAKPyUiebqYztH7N+PGnGn+VZwNy1b830UzocXMvEimoHuRxrzYYvcT5t8xhZcWKzOLZ/vnomV6LThi+Ke6KR+ie934XCm2VD4Gv312dOOjTwrV+2kIq9y+4DSuZ6F4B6vgf7tkkDG+YM0CYQnvKO+mnp89u8/lWwAzKSOoNufZswDll6ai4sLKDP4dht/rR54GrHXOZ90wS+qrjLVBmyIqrgt/JAtKsA5FtS287YwJW/5S1J1zQt3GiJgESMjgb4CcA3bJjSNuSCH1oiBr7j7heqfmcTH6PuyzeMIWl3qoWWIbzLu1xkv3W/gCKxFo53bCSVIqBQ6uxMomX0/i/bfVVyd+5nSOEOUmoLLh6AlfSRsIUZcuChKw/ag5HW1Xv1khNMYglhLO4MgvIKMsjEbt8vUsp1GpmigFhHPLo5143iB8czHn45W/7OZP9pJGbTaaOsnxUeuABdi5OyPylPeDTdpNJcxK6uTH0Y7xUhT+XPrE+oDItXPbzdpipOPVszrDrACmxG7pqBraTKQHoYoq85ZcAs0mtt/P5KdpcQWF5LZSWDuQy3N0pcpTV4zTNNZWx9v56dgKsih7oagq+peB2eGHaPKkBPG/tTvx9Y=
   firefox: latest
   apt:
     sources:
