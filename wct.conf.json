@@ -23,10 +23,6 @@
           "platform": "Windows 10",
           "version": "11"
         }, {
-          "browserName": "Opera",
-          "platform": "Windows 7",
-          "version": "12"
-        }, {
           "browserName": "safari",
           "platform": "OS X 10.12",
           "version": "10"
