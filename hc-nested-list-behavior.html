@@ -74,6 +74,8 @@
         const openNode = parts[k].find(item => item.open);
         if (openNode) openNode.open = false;
       });
+
+      this.set('parts', Object.assign({}, parts));
     },
     /**
      * Called when an item's open status is changed.  Update parts with children if lazy-loading then call update

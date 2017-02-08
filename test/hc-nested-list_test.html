@@ -65,6 +65,10 @@
             expect(element.parts.root[0].open).to.equal(false);
             expect(element.parts.root[1].open).to.equal(true);
           });
+          it('should call set on parts with the parts object', () => {
+            element.collapseTree();
+            expect(element.set.calledWith('parts')).to.equal(true);
+          });
         });
 
         describe('fetchChildren(item, parts, update)', () => {
