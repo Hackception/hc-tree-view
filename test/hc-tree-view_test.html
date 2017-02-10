@@ -143,6 +143,19 @@
             });
           });
         });
+        describe('reset()', () => {
+          beforeEach(() => element.deselectItems = sinon.spy());
+
+          it('should call deselectItems', () => {
+            element.reset();
+            expect(element.deselectItems.calledOnce).to.equal(true);
+          });
+          it('should call set for items', () => {
+            element.items = items;
+            element.reset();
+            expect(setSpy.calledWithMatch('items', items)).to.equal(true);
+          });
+        });
         describe('selectItems(items)', () => {
           beforeEach(() => element._updateState = sinon.spy());
 

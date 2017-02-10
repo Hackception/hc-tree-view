@@ -39,7 +39,7 @@ Custom property | Description | Default
       <template>
         <hc-tree-node
           class="item"
-          item="{{item}}"
+          item="[[item]]"
         ></hc-tree-node>
       </template>
     </hc-nested-list>
@@ -48,11 +48,7 @@ Custom property | Description | Default
   <script>
     Polymer({
       is: 'hc-tree-view',
-      behaviors: [hc.TreeViewBehavior],
-      properties: {
-        /* The list of items to display in the tree, using a flat structure */
-        items: Array
-      }
+      behaviors: [hc.TreeViewBehavior]
     });
   </script>
 </dom-module>

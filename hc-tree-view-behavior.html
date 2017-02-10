@@ -23,6 +23,8 @@
         type: String,
         value: 'parentId'
       },
+      /* The list of items to display in the tree, using a flat structure */
+      items: Array,
       /* The list of all selected items without duplicates */
       selectedItems: {
         type: Array,
@@ -102,6 +104,13 @@
       this.debounce('itemStateChanged', () => {
         this.set('_parts', Object.assign({}, this._parts));
       });
+    },
+    /**
+     * Clears all state from the tree, resetting back to the original tree.
+     */
+    reset() {
+      this.deselectItems();
+      this.set('items', Object.assign([], this.items));
     },
     /**
      * Takes an array of one or more items adds them to the selectedItems array, preventing duplicates.
