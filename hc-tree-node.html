@@ -28,6 +28,7 @@ Custom property | Description | Default
       :host {
         display: inline-block;
         padding-left: calc(var(--hc-tree-node-depth, 0) * var(--hc-tree-node-padding, 25px)) !important;
+        --paper-tristate-checkbox-label-spacing: 0;
 
         @apply --hc-tree-node;
       }
@@ -55,6 +56,14 @@ Custom property | Description | Default
     </style>
 
     <hc-nested-list-item item="{{item}}">
+      <slot name="icon">
+        <iron-icon
+          id="icon"
+          icon="[[_getIcon(item.open)]]"
+          open$="[[item.open]]"
+          visible$="[[item.hasChildren]]"
+        ></iron-icon>
+      </slot>
       <slot name="checkbox">
         <paper-tristate-checkbox
           id="checkbox"
@@ -65,14 +74,6 @@ Custom property | Description | Default
           indeterminate="[[indeterminate]]"
           on-state-changed="_stateChanged"
         ></paper-tristate-checkbox>
-      </slot>
-      <slot name="icon">
-        <iron-icon
-          id="icon"
-          icon="[[_getIcon(item.open)]]"
-          open$="[[item.open]]"
-          visible$="[[item.hasChildren]]"
-        ></iron-icon>
       </slot>
       <slot name="label">
         <span id="label">[[item.label]]</span>
@@ -93,7 +94,7 @@ Custom property | Description | Default
         /* The icon to use when the item is closed */
         closedIcon: {
           type: String,
-          value: 'icons:add-circle-outline'
+          value: 'icons:chevron-right'
         },
         /* The value to use when state=null */
         indeterminate: {
@@ -105,7 +106,7 @@ Custom property | Description | Default
         /* The icon to use when the item is open */
         openIcon: {
           type: String,
-          value: 'icons:remove-circle-outline'
+          value: 'icons:expand-more'
         },
         /* The value to use when state="off" */
         unchecked: {
