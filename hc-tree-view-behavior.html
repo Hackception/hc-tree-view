@@ -191,6 +191,7 @@
      * @param {Object} [parts = this._parts]
      */
     _updateState(items, state, parts = this._parts) {
+      if (!items || !parts) return;
       const updatedItems = items.
         // Filter items to remove children that have a parent in the array
         filter(item => !items.some(i => i[this.itemIdName] === item[this.itemParentIdName])).
