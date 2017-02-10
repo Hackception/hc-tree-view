@@ -43,6 +43,35 @@
         });
 
         // Public Functions
+        describe('collapseTree(parts)', () => {
+          let spy;
+
+          beforeEach(() => {
+            spy = sinon.spy(element, 'collapseTree');
+            element.parts = parts;
+          });
+
+          it('should collapse all nodes in the tree', () => {
+            Object.keys(element.parts).forEach(k =>
+              element.parts[k][0].open = true);
+            element.collapseTree();
+            const hasOpenNodes = Object.keys(element.parts).
+              some(k => element.parts[k].some(item => item.open));
+            expect(hasOpenNodes).to.equal(false);
+          });
+          it('should only collapse the first node in the list of nodes', () => {
+            element.parts.root[0].open = true;
+            element.parts.root[1].open = true;
+            element.collapseTree();
+            expect(element.parts.root[0].open).to.equal(false);
+            expect(element.parts.root[1].open).to.equal(true);
+          });
+          it('should call set on parts with the parts object', () => {
+            element.collapseTree();
+            expect(element.set.calledWith('parts')).to.equal(true);
+          });
+        });
+
         describe('fetchChildren(item, parts, update)', () => {
           let spy;
 

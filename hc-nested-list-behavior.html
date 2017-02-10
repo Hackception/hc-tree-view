@@ -62,6 +62,22 @@
       'item-open-changed': 'itemOpenChanged'
     },
     /**
+     * Collapses all open nodes in the tree.
+     * Relies upon logic being in place to prevent two sibling nodes from being open concurrently.
+     *
+     * @param {Object} [parts = this.parts] - object containing all properties of each node
+     */
+    collapseTree(parts = this.parts) {
+      if (!parts) return;
+      const keys = Object.keys(parts);
+      keys.forEach(k => {
+        const openNode = parts[k].find(item => item.open);
+        if (openNode) openNode.open = false;
+      });
+
+      this.set('parts', Object.assign({}, parts));
+    },
+    /**
      * Called when an item's open status is changed.  Update parts with children if lazy-loading then call update
      *  with the updated parts object once complete, update will always need to be called even if no changes were
      *  made to the parts object.  It's recommended to optimize your loader by checking to see if items already exist
@@ -107,7 +123,7 @@
      */
     itemOpenChanged(event, detail, idName = this.itemIdName, parts = this.parts) {
       // Block interactions while loading items
-      if (this.isLoading) return;
+      if (this.isLoading || !parts) return;
       this.isLoading = true;
 
       const items = parts[this._getParentId(detail.item)];

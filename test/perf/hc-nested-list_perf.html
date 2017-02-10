@@ -82,6 +82,14 @@
             it('should fetch a deeply nested items depth in <1ms', () =>
               expect(getPerformance(() =>
               element._getItemDepth(gChild || child || parent, parts)).avg).at.most(1));
+            it('should collapse open tree nodes in <1 ms', () => {
+              element.parts = parts;
+              Object.keys(element.parts).forEach(k => {
+                const items = element.parts[k];
+                items[items.length - 1].open = true;
+              });
+              expect(getPerformance(() => element.collapseTree()).avg).at.most(1);
+            });
           });
           describe('events', () => {
             const event = {
