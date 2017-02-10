@@ -282,16 +282,10 @@
             expect(element.itemStateChanged.calledWithMatch(null, {item: subItems[2], state})).
               to.equal(true);
           });
-          it('should do nothing when items is undefined', () => {
-            element._updateState();
-            // It explodes if items is not an array
-            expect(true).to.equal(true);
-          });
-          it('should do nothing when parts is undefined', () => {
-            element._updateState(items, 'on', null);
-            // It explodes if parts is not an object
-            expect(true).to.equal(true);
-          });
+          it('should do nothing when items is undefined', () =>
+            expect(element._updateState).to.not.throw(TypeError));
+          it('should do nothing when parts is undefined', () =>
+            expect(() => element._updateState(items, 'on', null)).to.not.throw(TypeError));
         });
       });
     </script>
