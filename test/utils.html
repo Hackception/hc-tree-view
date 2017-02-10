@@ -19,7 +19,7 @@
     // Add the root items
     for (let i = 0; i < pSize; i++) {
       const plabel = `Item ${i}`;
-      const pid = i;
+      const pid = String(i);
       if (!parts.root) parts.root = [];
 
       parts.root.push({

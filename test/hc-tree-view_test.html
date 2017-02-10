@@ -212,7 +212,10 @@
 
           beforeEach(() => {
             spy = sinon.spy(element, '_updateParents');
-            element.getParent = () => parent;
+            element.getParent = item => {
+              const p = items.find(i => i.id === item.parentId);
+              return p ? parts[p.parentId || 'root'].find(i => i.id === p.id) : null;
+            };
             parent = parts.root[0];
             item = parts[parent.id][0];
             children = parts[parent.id];
@@ -237,6 +240,16 @@
             parent.state = state;
             element._updateParents(item, state, parts);
             expect(parent.state).to.equal(state);
+          });
+          it('should set parent.state to null when gChild changes to on and children do not match', () => {
+            children.forEach(child => child.state = state);
+            item.state = 'off';
+            const gChild = parts[item.id][0];
+            gChild.state = state;
+            element._updateParents(gChild, state);
+            expect(parent.state).to.equal(null);
+            expect(item.state).to.equal(null);
+            expect(gChild.state).to.equal(state);
           });
         });
         describe('_updateState(items, state, parts)', () => {

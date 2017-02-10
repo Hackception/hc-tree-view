@@ -164,9 +164,7 @@
         const prevState = parent.state;
 
         // If all of the siblings share the same state then set it for the parent, otherwise it's indeterminate
-        const newState = siblings.every(
-          i => (i[this.itemIdName] === item[this.itemIdName] || i.state === state)) ?
-          state : null;
+        const newState = siblings.every(i => i.state === state) ? state : null;
 
         // If there's a change, update
         if (prevState !== newState) {
