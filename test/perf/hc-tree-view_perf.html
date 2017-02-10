@@ -98,7 +98,7 @@
 
         // TODO: Come back and optimize for the larger cases to acceptable limits
         describe.skip('with 1mil items', () => runTests(100, 100, 100));
-        describe('with 100k items', () => runTests(10, 100, 100));
+        describe.skip('with 100k items', () => runTests(10, 100, 100));
         describe('with 10k items', () => runTests(10, 10, 100));
         describe('with worst-case flat (10k nodes at one level)', () => runTests(10000, 0, 0));
       });
