@@ -57,7 +57,7 @@
         computed: '_computeItems(parts)'
       }
     },
-    observers: ['_computeParts(items)'],
+    observers: ['_computeParts(items, itemIdName, itemParentIdName)'],
     listeners: {
       'item-open-changed': 'itemOpenChanged'
     },
@@ -168,23 +168,27 @@
      * @private
      * @param {Object[]} items
      */
-    _computeParts(items) {
-      const parts = {};
+    _computeParts(items, itemIdName, itemParentIdName) {
+      if (!itemIdName || !itemParentIdName || !items) return;
 
-      items.forEach(item => {
-        // Fetch the parentId or set it to 'root' if there isn't one
-        const parentId = this._getParentId(item);
-        if (!parts[parentId]) parts[parentId] = [];
+      this.debounce('computeParts', function () {
+        const parts = {};
 
-        // Add the item, but first ensure we have the minimum requirements for the object
-        parts[parentId].push(Object.assign({
-          open: false,
-          state: 'off',
-          depth: this._getItemDepth(item, parts, parentId)
-        }, item));
+        this.items.forEach(item => {
+          // Fetch the parentId or set it to 'root' if there isn't one
+          const parentId = this._getParentId(item);
+          if (!parts[parentId]) parts[parentId] = [];
+
+          // Add the item, but first ensure we have the minimum requirements for the object
+          parts[parentId].push(Object.assign({
+            open: false,
+            state: 'off',
+            depth: this._getItemDepth(item, parts, parentId)
+          }, item));
+        });
+
+        this.set('parts', parts);
       });
-
-      this.set('parts', parts);
     },
     /**
      * Traces up the nested structure returning a depth for the items, if the item is a root item the depth

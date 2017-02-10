@@ -37,6 +37,7 @@
           parts = {};
           items = window.buildItems(count, count, count, parts);
 
+          replace('iron-list').with('fake-list');
           element = fixture('basic');
           setSpy = sinon.spy(element, 'set');
         });
@@ -151,29 +152,40 @@
             expect(item.depth).to.equal(1);
           });
         });
-        describe('_computeParts(items)', () => {
-          beforeEach(() => element._getItemDepth = () => 1);
-
-          it('should turn an array of items into a map based on the parentId', () => {
-            element._computeParts(items);
-            expect(element.set.calledWith('parts')).to.equal(true);
-            expect(element.parts.root.length).to.equal(parts.root.length);
-            expect(Object.keys(element.parts)).to.deep.equal(Object.keys(parts));
+        describe('_computeParts(items, itemIdName, itemParentIdName)', () => {
+          beforeEach(() => {
+            element._getItemDepth = () => 1;
           });
-          it('should be called whne items is updated', () => {
+
+          it('should turn an array of items into a map based on the parentId', done => {
+            // element.items = items;
+            element.items = items;
+            element._computeParts(items, 'id', 'parentId');
+            flush(() => {
+              expect(element.set.calledWithMatch('parts')).to.equal(true);
+              expect(element.parts.root.length).to.equal(parts.root.length);
+              expect(Object.keys(element.parts)).to.deep.equal(Object.keys(parts));
+              done();
+            });
+          });
+          it('should be called when items is updated', () => {
             element._computeParts = sinon.spy();
             element.items = [];
             expect(element._computeParts.calledOnce).to.equal(true);
           });
-          it('should add base properties for the items', () => {
-            element._computeParts(items);
-            const parent = element.parts.root[0];
-            const child = element.parts[parent.id][0];
-            const gChild = element.parts[child.id][0];
+          it('should add base properties for the items', done => {
+            element.items = items;
+            flush(() => {
+              const parent = element.parts.root[0];
+              const child = element.parts[parent.id][0];
+              const gChild = element.parts[child.id][0];
 
-            expect(parent.open).to.equal(false);
-            expect(parent.state).to.equal('off');
-            expect(parent.depth).to.equal(1);
+              expect(parent.open).to.equal(false);
+              expect(parent.state).to.equal('off');
+              expect(parent.depth).to.equal(1);
+
+              done();
+            });
           });
         });
         describe('_getItemDepth(item, parts)', () => {
