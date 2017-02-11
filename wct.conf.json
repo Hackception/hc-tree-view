@@ -7,9 +7,13 @@
           "platform": "Windows 10",
           "version": "latest"
         }, {
-          "browserName": "microsoftedge",
+            "browserName": "internet explorer",
+            "platform": "Windows 10",
+            "version": "11"
+        }, {
+          "browserName": "internet explorer",
           "platform": "Windows 7",
-          "version": "latest"
+          "version": "11"
         }, {
           "browserName": "firefox",
           "platform": "Windows 10",
@@ -21,19 +25,11 @@
         }, {
           "browserName": "chrome",
           "platform": "Windows 10",
-          "version": "latest"
+          "version": "latest-3"
         }, {
           "browserName": "chrome",
           "platform": "Windows 7",
-          "version": "latest"
-        }, {
-          "browserName": "internet explorer",
-          "platform": "Windows 7",
-          "version": "11"
-        }, {
-          "browserName": "internet explorer",
-          "platform": "Windows 10",
-          "version": "11"
+          "version": "latest-3"
         }, {
           "browserName": "safari",
           "platform": "OS X 10.12",
