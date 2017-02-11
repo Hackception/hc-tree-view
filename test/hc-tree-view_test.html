@@ -25,7 +25,7 @@
         let element, items = [], parts = {}, setSpy;
 
         beforeEach(() => {
-          items = window.buildItems(count, count, count, parts);
+          items = buildItems(count, count, count, parts);
           element = fixture('basic');
           setSpy = sinon.spy(element, 'set');
         });

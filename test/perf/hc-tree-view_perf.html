@@ -24,7 +24,7 @@
         let parts = {}, items = [];
 
         function runTests(pSize, cSize, gcSize, modifier = 1) {
-          beforeEach(() => items = window.buildItems(pSize, cSize, gcSize, parts));
+          beforeEach(() => items = buildItems(pSize, cSize, gcSize, parts));
 
           // deselectItems
           it('should deselect an item in <1ms', () =>
