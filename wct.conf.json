@@ -5,15 +5,15 @@
       "browsers": [{
           "browserName": "microsoftedge",
           "platform": "Windows 10",
-          "version": "latest"
+          "version": "latest-2"
         }, {
           "browserName": "firefox",
           "platform": "Windows 10",
-          "version": "latest"
+          "version": "latest-3"
         }, {
           "browserName": "chrome",
           "platform": "Windows 10",
-          "version": "latest"
+          "version": "latest-3"
         }, {
           "browserName": "internet explorer",
           "platform": "Windows 7",
