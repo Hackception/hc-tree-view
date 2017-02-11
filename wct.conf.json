@@ -25,11 +25,11 @@
         }, {
           "browserName": "chrome",
           "platform": "Windows 10",
-          "version": "latest-3"
+          "version": "latest"
         }, {
           "browserName": "chrome",
           "platform": "Windows 7",
-          "version": "latest-3"
+          "version": "latest"
         }, {
           "browserName": "safari",
           "platform": "OS X 10.12",
