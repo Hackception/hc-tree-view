@@ -28,6 +28,7 @@
               <button on-click="selectRootItem">Select Root Item</button>
               <button on-click="selectLeafItem">Select Leaf Item</button>
               <button on-click="deselectItems">Deselect Items</button>
+              <button on-click="reset">Reset</button>
               <hc-tree-view
                 id="tree"
                 items="{{items}}"
@@ -47,6 +48,9 @@
                 },
                 deselectItems() {
                   this.$.tree.deselectItems();
+                },
+                reset() {
+                  this.$.tree.reset();
                 },
                 selectLeafItem() {
                   const rootItem = this.$.tree._parts.root[0];

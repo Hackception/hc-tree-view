@@ -23,6 +23,8 @@
         type: String,
         value: 'parentId'
       },
+      /* The list of items to display in the tree, using a flat structure */
+      items: Array,
       /* The list of all selected items without duplicates */
       selectedItems: {
         type: Array,
@@ -104,6 +106,13 @@
       });
     },
     /**
+     * Clears all state from the tree, resetting back to the original tree.
+     */
+    reset() {
+      this.deselectItems();
+      this.set('items', Object.assign([], this.items));
+    },
+    /**
      * Takes an array of one or more items adds them to the selectedItems array, preventing duplicates.
      *
      * @param {Array.<Object>} items
@@ -164,9 +173,7 @@
         const prevState = parent.state;
 
         // If all of the siblings share the same state then set it for the parent, otherwise it's indeterminate
-        const newState = siblings.every(
-          i => (i[this.itemIdName] === item[this.itemIdName] || i.state === state)) ?
-          state : null;
+        const newState = siblings.every(i => i.state === state) ? state : null;
 
         // If there's a change, update
         if (prevState !== newState) {
@@ -184,6 +191,7 @@
      * @param {Object} [parts = this._parts]
      */
     _updateState(items, state, parts = this._parts) {
+      if (!items || !parts) return;
       const updatedItems = items.
         // Filter items to remove children that have a parent in the array
         filter(item => !items.some(i => i[this.itemIdName] === item[this.itemParentIdName])).
