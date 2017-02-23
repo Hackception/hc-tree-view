@@ -97,7 +97,9 @@
       item.state = state;
 
       // Change selected status for parents up the chain
-      this._updateParents(item, state);
+      const parent = this._updateParents(item, state);
+      if (parent)
+        this[parent.state === 'on' ? 'selectItems' : 'deselectItems']([parent], true);
 
       // Change selected status for children, even if they are hidden.
       this[state === 'on' ? 'selectItems' : 'deselectItems'](this._updateChildren(item, state), true);
@@ -163,6 +165,7 @@
      * @param {Object} item
      * @param {Boolean} state
      * @param {Object} [parts = this._parts]
+     * @returns {Object|undefined} Parent of the item if it exists
      */
     _updateParents(item, state, parts = this._parts) {
       // Update up the chain (parents)
@@ -180,6 +183,7 @@
           parent.state = newState;
           this._updateParents(parent, state, parts);
         }
+        return parent;
       }
     },
     /**
