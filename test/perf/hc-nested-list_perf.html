@@ -31,7 +31,7 @@
         let parts = {}, items = [];
 
         function runTests(pSize, cSize, gcSize, modifier = 1) {
-          beforeEach(() => items = window.buildItems(pSize, cSize, gcSize, 0, parts));
+          beforeEach(() => items = buildItems(pSize, cSize, gcSize, 0, parts));
 
           //_computeItems
           it('should build _items from parts in <1 frame with no parents open', () =>

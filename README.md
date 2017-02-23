@@ -4,7 +4,7 @@ An optimized tree-view based on a flat data structure.
 
 ## Browser Support
 
-[![Build Status](https://saucelabs.com/browser-matrix/stramel.svg)](https://saucelabs.com/beta/builds/556b2791a7da4a9397951969625607be)
+[![Sauce Test Status](https://saucelabs.com/browser-matrix/stramel.svg)](https://saucelabs.com/u/stramel)
 
 ## Install the Polymer-CLI
 

@@ -35,7 +35,7 @@
         beforeEach(() => {
           // Triggers a clean build of items and parts every time.
           parts = {};
-          items = window.buildItems(count, count, count, 0, parts);
+          items = buildItems(count, count, count, 0, parts);
 
           replace('iron-list').with('fake-list');
           element = fixture('basic');
