@@ -13,7 +13,7 @@
    * @param {Object} parts
    * @returns {Object[]}
    */
-  function buildItems(pSize, cSize, gcSize, parts = {}) {
+  function buildItems(pSize, cSize, gcSize, ggcSize = 0, parts = {}) {
     const items = [];
 
     // Add the root items
@@ -42,7 +42,7 @@
 
         // Add grand children
         for (let k = 0; k < gcSize; k++) {
-          const label = `${clabel} GrandChild ${k}`;
+          const label = `${clabel} GChild ${k}`;
           const parentId = cid;
           const id = `${cid}.${k}`;
           if (!parts[parentId]) parts[parentId] = [];
@@ -52,6 +52,20 @@
             id,
             parentId
           });
+
+          // Add great grand children
+          for (let l = 0; l < ggcSize; l++) {
+            const gclabel = `${label} GGChild ${l}`;
+            const parentId = id;
+            const gcid = `${id}.${l}`;
+            if (!parts[parentId]) parts[parentId] = [];
+
+            parts[parentId].push({
+              label: gclabel,
+              id: gcid,
+              parentId
+            });
+          }
         }
       }
     }
