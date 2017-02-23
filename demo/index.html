@@ -28,6 +28,8 @@
               <button on-click="selectRootItem">Select Root Item</button>
               <button on-click="selectLeafItem">Select Leaf Item</button>
               <button on-click="deselectItems">Deselect Items</button>
+              <button on-click="collapse">Collapse</button>
+              <button on-click="collapseLeafItem">Collapse Leaf Item</button>
               <button on-click="reset">Reset</button>
               <hc-tree-view
                 id="tree"
@@ -51,6 +53,14 @@
                 },
                 reset() {
                   this.$.tree.reset();
+                },
+                collapse() {
+                  this.$.tree.collapse();
+                },
+                collapseLeafItem() {
+                  const rootItem = this.$.tree._parts.root[0];
+                  const childItem = this.$.tree._parts[rootItem.id][0];
+                  this.$.tree.collapse([childItem]);
                 },
                 selectLeafItem() {
                   const rootItem = this.$.tree._parts.root[0];

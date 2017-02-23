@@ -115,6 +115,31 @@
       this.set('items', Object.assign([], this.items));
     },
     /**
+     * Collapses the tree while maintaining the current selection states
+     *
+     * @param {Array.<Object>} [items = this.items]
+     * @param {Object} [parts = this._parts]
+     * @param {Boolean} [preventUpdate] - blocks the update to parts and blocks template updating
+     */
+    collapse(items = this.items, parts = this._parts, preventUpdate = false) {
+      if (!items.length) return;
+
+      for(let i = 0; i < items.length; i++) {
+        const item = items[i];
+        item.open = false;
+
+        if (!item[this.itemParentIdName])
+          parts.root[item[this.itemIdName]].open = false;
+
+        this.collapse(parts[items[i][this.itemIdName]] || [], parts, true);
+      }
+
+      if (!preventUpdate)
+        this.debounce('collapseUpdate', () => {
+          this.set('_parts', Object.assign({}, this._parts));
+        });
+    },
+    /**
      * Takes an array of one or more items adds them to the selectedItems array, preventing duplicates.
      *
      * @param {Array.<Object>} items

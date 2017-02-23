@@ -49,6 +49,37 @@
             element._parts = parts;
             expect(getPerformance(() => element.itemStateChanged(event, event.detail)).avg).at.most(1);
           });
+          // collapse
+          it('should collapse all items in <1 frame', () => {
+            element.items = items;
+            expect(getPerformance(
+              () => element.collapse(undefined, parts),
+              () => {
+                const parent = parts.root['0'];
+                parent.open = true;
+                const children = parts['0.0'] || [];
+                const child = children[0] || {};
+                child.open = true;
+                const gChildren = parts['0.0.0'] || [];
+                const gChild = gChildren[0];
+              }
+            ).avg).at.most(frame);
+          });
+          it('should collapse passed items in <1 frame', () => {
+            element.items = items;
+            expect(getPerformance(
+              () => element.collapse([items[0]], parts),
+              () => {
+                const parent = parts.root['0'];
+                parent.open = true;
+                const children = parts['0.0'] || [];
+                const child = children[0] || {};
+                child.open = true;
+                const gChildren = parts['0.0.0'] || [];
+                const gChild = gChildren[0];
+              }
+            ).avg).at.most(frame);
+          });
           it('should update parent and child state in <1ms', () => {
             const parent = parts.root[0];
             const children = parts[parent.id] || [];
