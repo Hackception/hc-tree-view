@@ -39,19 +39,19 @@
           beforeEach(() => element._updateState = sinon.spy());
 
           it('should remove all items in items from selectedItems', () => {
-            const item = {test: 'test'};
+            const item = {id: 'test'};
             element.selectedItems = [item];
             element.deselectItems([item]);
             expect(element.set.calledWithMatch('selectedItems', [])).to.equal(true);
           });
           it('should call _updateState when !preventUpdate', () => {
-            const item = {test: 'test'};
+            const item = {id: 'test'};
             element.selectedItems = [item];
             element.deselectItems([item]);
             expect(element._updateState.calledWithMatch([item], 'off')).to.equal(true);
           });
           it('should not call _updateState when preventUpdate', () => {
-            const item = {test: 'test'};
+            const item = {id: 'test'};
             element.selectedItems = [item];
             element.deselectItems([item], true);
             expect(element._updateState.called).to.equal(false);
@@ -63,14 +63,14 @@
         });
         describe('getParent(item)', () => {
           it('should call getParent on the list', () => {
-            const item = {test: 'test'};
+            const item = {id: 'test'};
             element.$.list.getParent = sinon.spy();
             element.getParent(item);
             expect(element.$.list.getParent.calledWithMatch(item)).to.equal(true);
           });
         });
         describe('itemSelectedChanged(event, detail)', () => {
-          const item = {test: 'test'};
+          const item = {id: 'test'};
           beforeEach(() => {
             element.selectItems = sinon.spy();
             element.deselectItems = sinon.spy();
@@ -98,7 +98,7 @@
             element._updateParts = sinon.spy();
             element._updateParents = sinon.spy();
             element._updateChildren = sinon.stub();
-            element._updateChildren.returns([{test: 'test'}]);
+            element._updateChildren.returns([{id: 'test'}]);
             item = items[1];
           });
 
@@ -120,13 +120,13 @@
           it('should call selectItems when state is changed to "on"', () => {
             const state = 'on';
             element.itemStateChanged(null, {item, state});
-            expect(element.selectItems.calledWithMatch([{test: 'test'}], true)).to.equal(true);
+            expect(element.selectItems.calledWithMatch([{id: 'test'}], true)).to.equal(true);
           });
           it('should call deselectItems when state is changed to !"on"', () => {
             const state = 'off';
             item.state = 'on';
             element.itemStateChanged(null, {item, state});
-            expect(element.deselectItems.calledWithMatch([{test: 'test'}], true)).to.equal(true);
+            expect(element.deselectItems.calledWithMatch([{id: 'test'}], true)).to.equal(true);
           });
           it('should debounce', () => {
             const state = 'on';

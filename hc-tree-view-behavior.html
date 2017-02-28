@@ -48,23 +48,34 @@
      * @param {Array.<Object>} [items = this.selectedItems]
      * @param {Boolean} [preventUpdate] - blocks the call to _updateState to block template updating
      */
-     deselectItems(items = this.selectedItems, preventUpdate) {
-       let selectedItems = [];
+    deselectItems(items = this.selectedItems, preventUpdate) {
+      let selectedItems = [];
 
-       function getNodeId(i) {
-         return i[this.itemIdName];
-       }
-       selectedItems = this.selectedItems.map(getNodeId);
-       items = items.map(getNodeId);
+      function getNodeId(i) {
+        return i[this.itemIdName];
+      }
 
-       selectedItems = selectedItems.filter(i => items.indexOf(i) === -1);
+      // Map to Ids for perf
+      selectedItems = this.selectedItems.map(getNodeId, this);
+      passedItems = items.map(getNodeId, this);
 
-       // Update selectedItems if there was an item removed
-       if (this.selectedItems.length !== selectedItems.length) {
-         this.set('selectedItems', selectedItems);
-         if (!preventUpdate) this._updateState(items, 'off');
-       }
-     },
+      // Filter by Ids for perf
+      selectedItems = selectedItems
+        .filter(i => passedItems.indexOf(i) === -1);
+
+      // Update selectedItems if there was an item removed
+      if (this.selectedItems.length !== selectedItems.length) {
+        function getItemById(id) {
+          return this.selectedItems.find((i) => getNodeId(i) === id);
+        }
+
+      // Re-map ids to items if not empty
+       if (selectedItems.length > 0) selectedItems = selectedItems.map(getItemById, this);
+
+       this.set('selectedItems', selectedItems);
+       if (!preventUpdate) this._updateState(items, 'off');
+      }
+    },
     /**
      * Fetches the parent for the given item.
      *
