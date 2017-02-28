@@ -51,13 +51,11 @@
     deselectItems(items = this.selectedItems, preventUpdate) {
       let selectedItems = [];
 
-      function getNodeId(i) {
-        return i[this.itemIdName];
-      }
+      const getNodeId = (i) => i[this.itemIdName];
 
       // Map to Ids for perf
-      selectedItems = this.selectedItems.map(getNodeId, this);
-      passedItems = items.map(getNodeId, this);
+      selectedItems = this.selectedItems.map(getNodeId);
+      passedItems = items.map(getNodeId);
 
       // Filter by Ids for perf
       selectedItems = selectedItems
@@ -65,12 +63,10 @@
 
       // Update selectedItems if there was an item removed
       if (this.selectedItems.length !== selectedItems.length) {
-        function getItemById(id) {
-          return this.selectedItems.find((i) => getNodeId(i) === id);
-        }
+        const getItemById = (id) => this.selectedItems.find((i) => getNodeId(i) === id);
 
       // Re-map ids to items if not empty
-       if (selectedItems.length > 0) selectedItems = selectedItems.map(getItemById, this);
+       if (selectedItems.length > 0) selectedItems = selectedItems.map(getItemById);
 
        this.set('selectedItems', selectedItems);
        if (!preventUpdate) this._updateState(items, 'off');
