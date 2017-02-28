@@ -48,21 +48,23 @@
      * @param {Array.<Object>} [items = this.selectedItems]
      * @param {Boolean} [preventUpdate] - blocks the call to _updateState to block template updating
      */
-    deselectItems(items = this.selectedItems, preventUpdate) {
-      const selectedItems = Object.assign([], this.selectedItems);
-      items.forEach(item => {
-        const index = selectedItems.findIndex(i => i[this.itemIdName] === item[this.itemIdName]);
+     deselectItems(items = this.selectedItems, preventUpdate) {
+       let selectedItems = [];
 
-        // If the item exists, remove it.
-        if (index >= 0) selectedItems.splice(index, 1);
-      });
+       function getNodeId(i) {
+         return i[this.itemIdName];
+       }
+       selectedItems = this.selectedItems.map(getNodeId);
+       items = items.map(getNodeId);
 
-      // Update selectedItems if there was an item removed
-      if (this.selectedItems.length !== selectedItems.length) {
-        this.set('selectedItems', selectedItems);
-        if (!preventUpdate) this._updateState(items, 'off');
-      }
-    },
+       selectedItems = selectedItems.filter(i => items.indexOf(i) === -1);
+
+       // Update selectedItems if there was an item removed
+       if (this.selectedItems.length !== selectedItems.length) {
+         this.set('selectedItems', selectedItems);
+         if (!preventUpdate) this._updateState(items, 'off');
+       }
+     },
     /**
      * Fetches the parent for the given item.
      *
