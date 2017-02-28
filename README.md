@@ -1,4 +1,4 @@
-# \<hc-tree-view\>  [![Travis](https://img.shields.io/travis/rust-lang/rust.svg?style=flat-square)](https://github.com/Hackception/hc-tree-view/)
+# \<hc-tree-view\>  [![Travis](https://img.shields.io/travis/Hackception/hc-tree-view.svg?style=flat-square)](https://github.com/Hackception/hc-tree-view/) [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)](https://raw.githubusercontent.com/Hackception/hc-tree-view/master/LICENSE)
 
 An optimized tree-view based on a flat data structure.
 
