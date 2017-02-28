@@ -44,6 +44,13 @@
             element.deselectItems([item]);
             expect(element.set.calledWithMatch('selectedItems', [])).to.equal(true);
           });
+          it('should remove only passed items in items from selectedItems when no children associated', () => {
+            const item = {id: 'test'};
+            const item2 = {id: 'test2'};
+            element.selectedItems = [item, item2];
+            element.deselectItems([item]);
+            expect(element.set.calledWithMatch('selectedItems', [item2])).to.equal(true);
+          });
           it('should call _updateState when !preventUpdate', () => {
             const item = {id: 'test'};
             element.selectedItems = [item];
