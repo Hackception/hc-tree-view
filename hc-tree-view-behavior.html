@@ -82,21 +82,20 @@
 
       // Map to Ids for perf
       selectedItems = this.selectedItems.map(getNodeId);
-      passedItems = items.map(getNodeId);
+      const passedItems = items.map(getNodeId);
 
       // Filter by Ids for perf
-      selectedItems = selectedItems
-        .filter(i => passedItems.indexOf(i) === -1);
+      selectedItems = selectedItems.filter((i) => passedItems.indexOf(i) === -1);
 
       // Update selectedItems if there was an item removed
       if (this.selectedItems.length !== selectedItems.length) {
         const getItemById = (id) => this.selectedItems.find((i) => getNodeId(i) === id);
 
-      // Re-map ids to items if not empty
-       if (selectedItems.length > 0) selectedItems = selectedItems.map(getItemById);
+        // Re-map ids to items if not empty
+        if (selectedItems.length > 0) selectedItems = selectedItems.map(getItemById);
 
-       this.set('selectedItems', selectedItems);
-       if (!preventUpdate) this._updateState(items, 'off');
+        this.set('selectedItems', selectedItems);
+        if (!preventUpdate) this._updateState(items, 'off');
       }
     },
     /**
@@ -159,7 +158,7 @@
     selectItems(items, preventUpdate) {
       // Add all of the items to the selectedItems as a set
       const selectedSet = new Set(this.selectedItems);
-      items.forEach(item => selectedSet.add(item));
+      items.forEach((item) => selectedSet.add(item));
 
       // Update selectedItems with an array version if an item was added
       if (this.selectedItems.length !== selectedSet.size) {
@@ -201,7 +200,7 @@
      * @param {Object} item
      * @param {Boolean} state
      * @param {Object} [parts = this._parts]
-     * @returns {Object|undefined} Parent of the item if it exists
+     * @return {Object|undefined} - Parent of the item if it exists
      */
     _updateParents(item, state, parts = this._parts) {
       // Update up the chain (parents)
@@ -212,15 +211,15 @@
         const prevState = parent.state;
 
         // If all of the siblings share the same state then set it for the parent, otherwise it's indeterminate
-        const newState = siblings.every(i => i.state === state) ? state : null;
+        const newState = siblings.every((i) => i.state === state) ? state : null;
 
         // If there's a change, update
         if (prevState !== newState) {
           parent.state = newState;
           this._updateParents(parent, state, parts);
         }
-        return parent;
       }
+      return parent;
     },
     /**
      * Takes a list of items and updates their state in parts.
@@ -232,14 +231,13 @@
      */
     _updateState(items, state, parts = this._parts) {
       if (!items || !parts) return;
-      const updatedItems = items.
-        // Filter items to remove children that have a parent in the array
-        filter(item => !items.some(i => i[this.itemIdName] === item[this.itemParentIdName])).
+      // Filter items to remove children that have a parent in the array
+      items.filter((item) => !items.some((i) => i[this.itemIdName] === item[this.itemParentIdName])).
         // Pass the filtered items into _updateChildren
-        forEach(item => {
+        forEach((item) => {
           // Find the item in the parts object
           const parentId = this.$.list._getParentId(item);
-          const partItem = parts[parentId].find(i => i[this.itemIdName] === item[this.itemIdName]);
+          const partItem = parts[parentId].find((i) => i[this.itemIdName] === item[this.itemIdName]);
           // Trigger a state change that will propagate
           this.itemStateChanged(null, {
             item: partItem,

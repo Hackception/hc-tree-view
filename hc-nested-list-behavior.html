@@ -91,7 +91,7 @@
       const keys = Object.keys(parts);
       let parent;
       for (let i = 0; i < keys.length; i++) {
-        parent = (parts[keys[i]] || []).find(p => {
+        parent = (parts[keys[i]] || []).find((p) => {
           return p[idName] === parentId;
         });
         if (parent) break;
@@ -100,7 +100,7 @@
 
       // Fetch the item from parts if it exists (maintain state)
       const parents = parts[this._getParentId(parent)];
-      return parents ? parents.find(i => i[idName] === parentId) : null;
+      return parents ? parents.find((i) => i[idName] === parentId) : null;
     },
     /**
      * Handles changes to the open status of an item.
@@ -134,10 +134,14 @@
 
       // fetch children and update when done.
       const ids = Object.keys(parts);
-      this.fetchChildren(item, parts, parts => {
-        const newIds = Object.keys(parts).filter(id => ids.indexOf(id) < 0);
-        newIds.forEach(id =>
-          parts[id].forEach((i, index) => parts[id][index] = this.__setDefaultPart(i)));
+      this.fetchChildren(item, parts, (parts) => {
+        const newIds = Object.keys(parts).filter((id) => ids.indexOf(id) < 0);
+        for (let i = 0; i < newIds.length; i++) {
+          const id = newIds[i];
+          for (let j = 0; j < parts[id].length; j++) {
+            parts[id][j] = this.__setDefaultPart(parts[id][j]);
+          }
+        }
         this.set('parts', Object.assign({}, parts));
         this.isLoading = false;
       });
@@ -159,9 +163,9 @@
       const newItems = [];
 
       // Push all items into the new array, and if there is a child item then push all of the children.
-      items.forEach(item => {
+      items.forEach((item) => {
         // Some properties need to be re-calculated every time we update the list to support lazy-loading
-        item.hasChildren = !item.hasChildren ? Boolean(parts[item[this.itemIdName]]) : true;
+        item.hasChildren = item.hasChildren || Boolean(parts[item[this.itemIdName]]);
         item.depth = !(item.depth >= 0) ? this._getItemDepth(item, parts) : item.depth;
 
         newItems.push(item);
@@ -186,7 +190,7 @@
       this.debounce('computeParts', () => {
         const parts = {};
 
-        this.items.forEach(item => {
+        this.items.forEach((item) => {
           // Fetch the parentId or set it to 'root' if there isn't one
           const parentId = this._getParentId(item);
           if (!parts[parentId]) parts[parentId] = [];
