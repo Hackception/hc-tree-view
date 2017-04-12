@@ -49,7 +49,7 @@
       /**
        * The currently visible subset of items from the items property
        *
-       * @private
+       * @protected
        */
       _items: {
         type: Array,
@@ -79,22 +79,28 @@
      *
      * @param {Object} item
      * @param {Object} [parts = this.parts]
-     * @param {Array.<Object>} [items = this.items]
      * @param {String} [idName = this.itemIdName]
-     * @returns {Object|undefined}
+     * @return {Object|null}
      */
-    getParent(item, parts = this.parts, items = this.items, idName = this.itemIdName) {
+    getParent(item, parts = this.parts, idName = this.itemIdName) {
       // Ensure it has a parentId
       const parentId = this._getParentId(item);
-      if (parentId === 'root') return;
+      if (parentId === 'root') return null;
 
       // Fetch the parent by the id
-      const parent = (items || []).find(i => i[idName] === parentId);
-      if (!parent) return;
+      const keys = Object.keys(parts);
+      let parent;
+      for (let i = 0; i < keys.length; i++) {
+        parent = (parts[keys[i]] || []).find((p) => {
+          return p[idName] === parentId;
+        });
+        if (parent) break;
+      }
+      if (!parent) return null;
 
       // Fetch the item from parts if it exists (maintain state)
       const parents = parts[this._getParentId(parent)];
-      return parents ? parents.find(i => i[idName] === parentId) : undefined;
+      return parents ? parents.find((i) => i[idName] === parentId) : null;
     },
     /**
      * Handles changes to the open status of an item.
@@ -127,17 +133,25 @@
       }
 
       // fetch children and update when done.
-      this.fetchChildren(item, parts, (parts => {
+      const ids = Object.keys(parts);
+      this.fetchChildren(item, parts, (parts) => {
+        const newIds = Object.keys(parts).filter((id) => ids.indexOf(id) < 0);
+        for (let i = 0; i < newIds.length; i++) {
+          const id = newIds[i];
+          for (let j = 0; j < parts[id].length; j++) {
+            parts[id][j] = this.__setDefaultPart(parts[id][j]);
+          }
+        }
         this.set('parts', Object.assign({}, parts));
         this.isLoading = false;
-      }).bind(this));
+      });
     },
     /**
      * Takes a parts object and optionally a start point for an array then iterates over the
      *  object starting at the root if there isn't a location already set and finds all open nodes
      *  recursively calling itself to ensure order is preserved once flattened.
      *
-     * @private
+     * @protected
      * @param {Object} parts
      * @param {Object[]} [items=parts.root]
      * @param {String} [idName=this.itemIdName]
@@ -149,9 +163,9 @@
       const newItems = [];
 
       // Push all items into the new array, and if there is a child item then push all of the children.
-      items.forEach(item => {
+      items.forEach((item) => {
         // Some properties need to be re-calculated every time we update the list to support lazy-loading
-        item.hasChildren = Boolean(parts[item[this.itemIdName]]);
+        item.hasChildren = item.hasChildren || Boolean(parts[item[this.itemIdName]]);
         item.depth = !(item.depth >= 0) ? this._getItemDepth(item, parts) : item.depth;
 
         newItems.push(item);
@@ -165,26 +179,24 @@
      * Takes the flat items structure and builds out a map of parent-child elements which gets
      *  stored and used for optimized rendering later.
      *
-     * @private
+     * @protected
      * @param {Object[]} items
+     * @param {String} itemIdName
+     * @param {String} itemParentIdName
      */
     _computeParts(items, itemIdName, itemParentIdName) {
       if (!itemIdName || !itemParentIdName || !items) return;
 
-      this.debounce('computeParts', function () {
+      this.debounce('computeParts', () => {
         const parts = {};
 
-        this.items.forEach(item => {
+        this.items.forEach((item) => {
           // Fetch the parentId or set it to 'root' if there isn't one
           const parentId = this._getParentId(item);
           if (!parts[parentId]) parts[parentId] = [];
 
           // Add the item, but first ensure we have the minimum requirements for the object
-          parts[parentId].push(Object.assign({
-            open: false,
-            state: 'off',
-            depth: this._getItemDepth(item, parts, parentId)
-          }, item));
+          parts[parentId].push(this.__setDefaultPart(item, parts, parentId));
         });
 
         this.set('parts', parts);
@@ -194,7 +206,7 @@
      * Traces up the nested structure returning a depth for the items, if the item is a root item the depth
      *  will be 0, if it can't be traced up to a root then it returns undefined.
      *
-     * @private
+     * @protected
      * @param {Object} item
      * @param {Object} parts
      * @param {String} [parentId = this._getParentId(item)]
@@ -220,7 +232,7 @@
     /**
      * Used to fetch the parentId if it's available or default back to 'root'.
      *
-     * @private
+     * @protected
      * @param {Object} item
      * @param {String} [parentIdName=this.itemParentIdName]
      * @returns {String|Number}
@@ -229,6 +241,22 @@
       return (item[parentIdName] || item[parentIdName] === 0) ?
         item[parentIdName] :
         'root';
+    },
+    /**
+     * Ensures a part has the require default values.
+     *
+     * @private
+     * @param {Object} item
+     * @param {Object} parts
+     * @param {String} parentId
+     * @return {Object}
+     */
+    __setDefaultPart(item, parts, parentId) {
+      return Object.assign({
+        open: false,
+        state: 'off',
+        depth: this._getItemDepth(item, parts, parentId)
+      }, item);
     }
   };
 

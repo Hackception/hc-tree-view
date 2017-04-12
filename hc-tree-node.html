@@ -82,7 +82,6 @@ Custom property | Description | Default
 
   <script>
     Polymer({
-      /* global hc */
       is: 'hc-tree-node',
       properties: {
         /* The value to use when state="on" */
@@ -134,8 +133,11 @@ Custom property | Description | Default
          *  and to prevent event bubbling.  This is using an annonymous function to keep the correct scope
          *  that is provided by the checkbox element instead of an arrow function which will use the local
          *  scope.
+         *
+         * @protected
+         * @param {Event} event
          */
-        this.$.checkbox._regularTap = function(event) {
+        this.$.checkbox._regularTap = function (event) {
           event.stopPropagation();
           this.state = this.state === 'on' ? 'off' : 'on';
         };

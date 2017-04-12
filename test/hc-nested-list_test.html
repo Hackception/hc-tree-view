@@ -61,20 +61,21 @@
             element.parts = parts;
           });
 
-          it('should return undefined when there is no parent', () =>
-            expect(element.getParent(parts.root[0])).to.equal(undefined));
+          it('should return null when there is no parent', () =>
+            expect(element.getParent(parts.root[0])).to.equal(null));
           it('should return the parent from parts if it exists', () =>
             expect(element.getParent(parts[parts.root[0].id][0])).to.deep.equal(parts.root[0]));
         });
         describe('itemOpenChanged(event, detail, idName)', () => {
           const event = {};
-          let fetchChildrenSpy;
+          let defaultPartSpy, fetchChildrenSpy;
 
           beforeEach(() => {
             event.detail = {
               item: Object.assign({}, parts.root[0]),
               open: true
             };
+            defaultPartSpy = sinon.spy(element, '__setDefaultPart');
             fetchChildrenSpy = sinon.spy(element, 'fetchChildren');
             element._computeItems = () => {};
           });
@@ -108,6 +109,20 @@
               expect(element.itemOpenChanged.calledOnce).to.equal(true);
               done();
             });
+          });
+          it('should ensure all new items have the required defaults', () => {
+            element.fetchChildren = (item, parts, update) => {
+              parts.foo = [{
+                id: 'bar',
+                parentId: 'foo',
+                label: 'bar',
+                depth: 1
+              }];
+              update(parts);
+            };
+            element.parts = parts;
+            element.itemOpenChanged(event, event.detail);
+            expect(defaultPartSpy.calledOnce).to.equal(true);
           });
         });
         // Private Functions
@@ -215,6 +230,20 @@
             expect(element._getParentId({parentId: 0})).to.equal(0));
           it('should return root when item.parentId is an empty string', () =>
             expect(element._getParentId({parentId: ''})).to.equal('root'));
+        });
+        describe('__setDefaultPart(item, parts, parentId)', () => {
+          it('should add in the default values for parts', () => {
+            const part = element.__setDefaultPart(parts.root[0], parts, 'root');
+            expect(part.open).to.equal(false);
+            expect(part.state).to.equal('off');
+            expect(part.depth).to.equal(0);
+          });
+          it('should preserve the override values for parts', () => {
+            const part = element.__setDefaultPart(Object.assign({open: true}, parts.root[0]), parts, 'root');
+            expect(part.open).to.equal(true);
+            expect(part.state).to.equal('off');
+            expect(part.depth).to.equal(0);
+          });
         });
       });
     </script>
