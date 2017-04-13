@@ -80,22 +80,28 @@
             element._computeItems = () => {};
           });
 
-          it('should update the open state for the item', () => {
+          it('should update the open state for the item', (done) => {
             element.parts = parts;
             element.itemOpenChanged(event, event.detail);
-            expect(element.set.calledOnce).to.equal(true);
-            expect(element.set.calledWith('parts')).to.equal(true);
-            expect(element.set.args[0][1].root[0].open).to.equal(event.detail.open);
-            expect(fetchChildrenSpy.calledWithMatch(element.parts.root[0], element.parts)).to.equal(true);
+            flush(() => {
+              expect(element.set.calledOnce).to.equal(true);
+              expect(element.set.calledWith('parts')).to.equal(true);
+              expect(element.set.args[0][1].root[0].open).to.equal(event.detail.open);
+              expect(fetchChildrenSpy.calledWithMatch(element.parts.root[0], element.parts)).to.equal(true);
+              done();
+            });
           });
-          it('should set open to false for all other items', () => {
+          it('should set open to false for all other items', (done) => {
             parts.root[1].open = true;
             element.parts = parts;
             element.itemOpenChanged(event, event.detail);
-            expect(element.set.calledOnce).to.equal(true);
-            expect(element.set.calledWith('parts')).to.equal(true);
-            expect(element.set.args[0][1].root[0].open).to.equal(event.detail.open);
-            expect(element.set.args[0][1].root[1].open).to.equal(false);
+            flush(() => {
+              expect(element.set.calledOnce).to.equal(true);
+              expect(element.set.calledWith('parts')).to.equal(true);
+              expect(element.set.args[0][1].root[0].open).to.equal(event.detail.open);
+              expect(element.set.args[0][1].root[1].open).to.equal(false);
+              done();
+            });
           });
           it('should not run if isLoading is true', () => {
             element.isLoading = true;

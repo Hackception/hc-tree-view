@@ -132,25 +132,25 @@
         } else items[i].open = false; // If it's not the item we want, ensure it's closed
       }
 
-      if (item) {
-        // fetch children and update when done, when there's an item
-        const ids = Object.keys(parts);
-        this.fetchChildren(item, parts, (parts) => {
-          const newIds = Object.keys(parts).filter((id) => ids.indexOf(id) < 0);
-          for (let i = 0; i < newIds.length; i++) {
-            const id = newIds[i];
-            for (let j = 0; j < parts[id].length; j++) {
-              parts[id][j] = this.__setDefaultPart(parts[id][j], parts, id, item.state === 'on' ? 'on' : 'off');
+      (new Promise((res) => {
+        if (item) {
+          // fetch children and update when done, when there's an item
+          const ids = Object.keys(parts);
+          this.fetchChildren(item, parts, (parts) => {
+            const newIds = Object.keys(parts).filter((id) => ids.indexOf(id) < 0);
+            for (let i = 0; i < newIds.length; i++) {
+              const id = newIds[i];
+              for (let j = 0; j < parts[id].length; j++) {
+                parts[id][j] = this.__setDefaultPart(parts[id][j], parts, id, item.state === 'on' ? 'on' : 'off');
+              }
             }
-          }
-          this.set('parts', Object.assign({}, parts));
-          this.isLoading = false;
-        });
-      } else {
-        // When there's no item, update the change to parts and finish loading.
+            res(parts);
+          });
+        } else res(parts);
+      })).then(() => {
         this.set('parts', Object.assign({}, parts));
         this.isLoading = false;
-      }
+      });
     },
     /**
      * Takes a parts object and optionally a start point for an array then iterates over the
