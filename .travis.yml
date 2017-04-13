@@ -17,7 +17,7 @@ addons:
     sources:
       - google-chrome
     packages:
-      - google-chrome-stable
+      - google-chrome-beta
 script:
   - xvfb-run wct
   - 'if [ "${TRAVIS_PULL_REQUEST}" = "false" ]; then wct --plugin sauce; fi'
