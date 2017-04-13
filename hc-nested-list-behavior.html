@@ -132,19 +132,25 @@
         } else items[i].open = false; // If it's not the item we want, ensure it's closed
       }
 
-      // fetch children and update when done.
-      const ids = Object.keys(parts);
-      this.fetchChildren(item, parts, (parts) => {
-        const newIds = Object.keys(parts).filter((id) => ids.indexOf(id) < 0);
-        for (let i = 0; i < newIds.length; i++) {
-          const id = newIds[i];
-          for (let j = 0; j < parts[id].length; j++) {
-            parts[id][j] = this.__setDefaultPart(parts[id][j]);
+      if (item) {
+        // fetch children and update when done, when there's an item
+        const ids = Object.keys(parts);
+        this.fetchChildren(item, parts, (parts) => {
+          const newIds = Object.keys(parts).filter((id) => ids.indexOf(id) < 0);
+          for (let i = 0; i < newIds.length; i++) {
+            const id = newIds[i];
+            for (let j = 0; j < parts[id].length; j++) {
+              parts[id][j] = this.__setDefaultPart(parts[id][j], parts, id, item.state === 'on' ? 'on' : 'off');
+            }
           }
-        }
+          this.set('parts', Object.assign({}, parts));
+          this.isLoading = false;
+        });
+      } else {
+        // When there's no item, update the change to parts and finish loading.
         this.set('parts', Object.assign({}, parts));
         this.isLoading = false;
-      });
+      }
     },
     /**
      * Takes a parts object and optionally a start point for an array then iterates over the
@@ -249,12 +255,13 @@
      * @param {Object} item
      * @param {Object} parts
      * @param {String} parentId
+     * @param {String} [parentState="off"]
      * @return {Object}
      */
-    __setDefaultPart(item, parts, parentId) {
+    __setDefaultPart(item, parts, parentId, parentState = 'off') {
       return Object.assign({
         open: false,
-        state: 'off',
+        state: parentState,
         depth: this._getItemDepth(item, parts, parentId)
       }, item);
     }
