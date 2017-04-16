@@ -14,12 +14,6 @@ addons:
       - google-chrome
     packages:
       - google-chrome-beta
-cache:
-  directories:
-    - $HOME/.cache/yarn
-    - $HOME/.cache/bower
-    - $HOME/.npm
-    - bower_components
 script:
   - polymer lint --rules polymer-1 --input *.html
   - xvfb-run polymer test

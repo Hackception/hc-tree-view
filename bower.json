@@ -10,11 +10,8 @@
   "devDependencies": {
     "iron-component-page": "PolymerElements/iron-component-page#^1.0.0",
     "iron-demo-helpers": "PolymerElements/iron-demo-helpers#^1.0.0",
-    "paper-checkbox": "^1.4.2",
-    "web-component-tester": "Polymer/web-component-tester#^6.0.0-prerelease.6",
+    "paper-checkbox": "PolymerElements/paper-checkbox#^1.4.2",
+    "web-component-tester": "Polymer/web-component-tester#^6.0.0-prerelease.8",
     "webcomponentsjs": "webcomponents/webcomponentsjs#^0.7.0"
-  },
-  "resolutions": {
-    "mocha": "^3.2.0"
   }
 }
