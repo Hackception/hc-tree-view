@@ -13,5 +13,8 @@
     "paper-checkbox": "^1.4.2",
     "web-component-tester": "Polymer/web-component-tester#^6.0.0-prerelease.6",
     "webcomponentsjs": "webcomponents/webcomponentsjs#^0.7.0"
+  },
+  "resolutions": {
+    "mocha": "^3.2.0"
   }
 }
