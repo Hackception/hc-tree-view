@@ -3,7 +3,7 @@ node_js: stable
 dist: trusty
 sudo: required
 before_script:
-  - npm install -g bower polymer-cli@next --depth=0
+  - npm install -g bower polymer-cli@next
   - polymer install
   - sudo mv /usr/bin/google-chrome /usr/bin/google-chrome-old
   - sudo mv /usr/bin/google-chrome-beta /usr/bin/google-chrome
