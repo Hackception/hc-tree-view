@@ -8,7 +8,6 @@ before_script:
   - sudo mv /usr/bin/google-chrome /usr/bin/google-chrome-old
   - sudo mv /usr/bin/google-chrome-beta /usr/bin/google-chrome
 addons:
-  sauce_connect: true
   firefox: latest
   apt:
     sources:
