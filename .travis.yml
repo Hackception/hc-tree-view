@@ -2,7 +2,7 @@ language: node_js
 node_js: stable
 dist: trusty
 sudo: required
-before_script:
+
   - npm install -g bower polymer-cli@next
   - polymer install
   - sudo mv /usr/bin/google-chrome /usr/bin/google-chrome-old
@@ -14,8 +14,9 @@ addons:
       - google-chrome
     packages:
       - google-chrome-beta
+before_script:
+  - polymer lint -i *.html
 script:
-  - polymer lint --rules polymer-1 --input *.html
   - xvfb-run polymer test
   - >-
     if [ "${TRAVIS_PULL_REQUEST}" = "false" ]; then polymer test --plugin sauce;
