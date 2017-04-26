@@ -2,18 +2,16 @@ language: node_js
 node_js: stable
 dist: trusty
 sudo: required
-
-  - npm install -g bower polymer-cli@next
+install:
+  - npm install -g bower polymer-cli
   - polymer install
-  - sudo mv /usr/bin/google-chrome /usr/bin/google-chrome-old
-  - sudo mv /usr/bin/google-chrome-beta /usr/bin/google-chrome
 addons:
   firefox: latest
   apt:
     sources:
       - google-chrome
     packages:
-      - google-chrome-beta
+      - google-chrome-stable
 before_script:
   - polymer lint -i *.html
 script:
