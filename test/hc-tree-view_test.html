@@ -9,8 +9,8 @@
     <script src="../../webcomponentsjs/webcomponents-lite.js"></script>
     <script src="../../web-component-tester/browser.js"></script>
 
-    <link rel="import" href="utils.html">
     <link rel="import" href="../hc-tree-view.html">
+    <link rel="import" href="utils.html">
   </head>
   <body>
     <test-fixture id="basic">
@@ -35,7 +35,6 @@
         });
 
         // Public Functions
-        describe('deselectItems(items)', () => {
           beforeEach(() => element._updateState = sinon.spy());
 
           it('should remove all items in items from selectedItems', () => {
