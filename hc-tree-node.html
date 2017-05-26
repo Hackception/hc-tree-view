@@ -72,6 +72,7 @@ Custom property | Description | Default
           unchecked="[[unchecked]]"
           indeterminate="[[indeterminate]]"
           on-state-changed="_stateChanged"
+          disabled$="[[disabled]]"
         ></paper-tristate-checkbox>
       </slot>
       <slot name="label">
@@ -124,6 +125,11 @@ Custom property | Description | Default
         __init: {
           type: Boolean,
           value: true
+        },
+        /* The value to disable the node*/
+        disabled: {
+          type: Boolean,
+          value: false
         }
       },
       observers: ['_updateDepth(item.depth)'],
