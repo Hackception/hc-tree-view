@@ -57,6 +57,12 @@ Custom property | Description | Default
     Polymer({
       /* global hc */
       is: 'hc-nested-list',
+      properties: {
+        openMultipleNodes: {
+          type: Boolean,
+          value: false
+        }
+      },
       behaviors: [hc.NestedListBehavior]
     });
   </script>
