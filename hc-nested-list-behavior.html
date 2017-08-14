@@ -129,7 +129,9 @@
           if (!detail.open) break;
           // If it was opened, store it for use later.
           else item = items[i];
-        } else items[i].open = false; // If it's not the item we want, ensure it's closed
+        } else if(!this.openMultipleNodes) {
+          items[i].open = false; // If it's not the item we want, ensure it's closed
+        }
       }
 
       (new Promise((res) => {
