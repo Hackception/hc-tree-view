@@ -258,9 +258,11 @@
           const parentId = this.$.list._getParentId(item);
           const partItem = parts[parentId].find((i) => i[this.itemIdName] === item[this.itemIdName]);
           // Trigger a state change that will propagate
-          this.itemStateChanged(null, {
-            item: partItem,
-            state,
+          this.itemStateChanged({
+            detail: {
+              item: partItem,
+              state,
+            },
           });
         });
     },
