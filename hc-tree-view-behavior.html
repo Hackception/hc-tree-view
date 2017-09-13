@@ -16,12 +16,12 @@
       /* Used to allow changing what the tree node's id is */
       itemIdName: {
         type: String,
-        value: 'id'
+        value: 'id',
       },
       /* Used to allow changing what the tree node's parent id is */
       itemParentIdName: {
         type: String,
-        value: 'parentId'
+        value: 'parentId',
       },
       /* The list of items to display in the tree, using a flat structure */
       items: Array,
@@ -29,19 +29,25 @@
       selectedItems: {
         type: Array,
         value: () => [],
-        notify: true
+        notify: true,
       },
       /**
        * The parts object used by the list element
        *
        * @private
        */
-      _parts: Object
+      _parts: Object,
     },
-    listeners: {
-      'item-selected-changed': 'itemSelectedChanged',
-      'item-state-changed': 'itemStateChanged'
+    attached() {
+      this.addEventListener('item-selected-changed', this.itemSelectedChanged);
+      this.addEventListener('item-state-changed', this.itemStateChanged);
     },
+
+    detached() {
+      this.removeEventListener('item-selected-changed', this.itemSelectedChanged);
+      this.removeEventListener('item-state-changed', this.itemStateChanged);
+    },
+
     /**
      * Collapses the tree while maintaining the current selection states
      *
@@ -102,7 +108,7 @@
      * Fetches the parent for the given item.
      *
      * @param {Object} item
-     * @returns {Object|undefined}
+     * @return {Object|undefined}
      */
     getParent(item) {
       return this.$.list.getParent(item);
@@ -112,19 +118,23 @@
      *
      * @listens hc-tree-view-behavior#item-selected-changed
      * @param {CustomEvent} [event]
-     * @param {Object} detail
      */
-    itemSelectedChanged(event, detail) {
-      this[detail.selected ? 'selectItems' : 'deselectItems']([detail.item], true);
+    itemSelectedChanged(event) {
+      const detail = event.detail;
+      if (detail.selected) {
+        this.selectItems([detail.item], true);
+      } else {
+        this.deselectItems([detail.item], true);
+      }
     },
     /**
      * Updates the parents and children of this item that it's state was changed, update thiers as well if needed.
      *
      * @listens hc-tree-view-behavior#item-state-changed
      * @param {CustomEvent} event
-     * @param {Object} detail
      */
-    itemStateChanged(event, detail) {
+    itemStateChanged(event) {
+      const detail = event.detail;
       const {item, state} = detail;
 
       // Reject duplicated events
@@ -133,11 +143,20 @@
 
       // Change selected status for parents up the chain
       const parent = this._updateParents(item, state);
-      if (parent)
-        this[parent.state === 'on' ? 'selectItems' : 'deselectItems']([parent], true);
+      if (parent) {
+        if (parent.state === 'on') {
+          this.selectItems([parent], true);
+        } else {
+          this.deselectItems([parent], true);
+        }
+      }
 
       // Change selected status for children, even if they are hidden.
-      this[state === 'on' ? 'selectItems' : 'deselectItems'](this._updateChildren(item, state), true);
+      if ( state === 'on') {
+        this.selectItems(this._updateChildren(item, state), true);
+      } else {
+        this.deselectItems(this._updateChildren(item, state), true);
+      }
       this.debounce('itemStateChanged', () => {
         this.set('_parts', Object.assign({}, this._parts));
       });
@@ -173,7 +192,7 @@
      * @param {Object} item
      * @param {Boolean} state
      * @param {Object} [parts = this._parts]
-     * @returns {Array.<Object>}
+     * @return {Array.<Object>}
      */
     _updateChildren(item, state, parts = this._parts) {
       const children = parts[item[this.itemIdName]];
@@ -241,12 +260,11 @@
           // Trigger a state change that will propagate
           this.itemStateChanged(null, {
             item: partItem,
-            state
+            state,
           });
         });
-    }
+    },
   };
-
   /**
    * Event for changing the selection status of a tree node
    *

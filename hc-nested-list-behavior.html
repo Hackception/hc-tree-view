@@ -17,17 +17,17 @@
       isLoading: {
         type: Boolean,
         value: false,
-        notify: true
+        notify: true,
       },
       /* The property name for the id on each item. */
       itemIdName: {
         type: String,
-        value: 'id'
+        value: 'id',
       },
       /* The property name for the parentId on each item. */
       itemParentIdName: {
         type: String,
-        value: 'parentId'
+        value: 'parentId',
       },
       /**
        * The flat array of items to build the nested list structure from, requires an id and
@@ -44,7 +44,7 @@
        */
       parts: {
         type: Object,
-        notify: true
+        notify: true,
       },
       /**
        * The currently visible subset of items from the items property
@@ -54,12 +54,15 @@
       _items: {
         type: Array,
         readOnly: true,
-        computed: '_computeItems(parts)'
-      }
+        computed: '_computeItems(parts)',
+      },
     },
     observers: ['_computeParts(items, itemIdName, itemParentIdName)'],
-    listeners: {
-      'item-open-changed': 'itemOpenChanged'
+    attached() {
+      this.addEventListener('item-open-changed', this.itemOpenChanged);
+    },
+    detached() {
+      this.removeEventListener('item-open-changed', this.itemOpenChanged);
     },
     /**
      * Called when an item's open status is changed.  Update parts with children if lazy-loading then call update
@@ -111,11 +114,12 @@
      * @param {String} [idName=this.itemIdName]
      * @param {Object} [parts = this.parts]
      */
-    itemOpenChanged(event, detail, idName = this.itemIdName, parts = this.parts) {
+    itemOpenChanged(event, idName = this.itemIdName, parts = this.parts) {
       // Block interactions while loading items
       if (this.isLoading) return;
       this.isLoading = true;
 
+      const detail = event.detail;
       const items = parts[this._getParentId(detail.item)];
       const id = detail.item[idName];
       let item;
@@ -161,7 +165,7 @@
      * @param {Object} parts
      * @param {Object[]} [items=parts.root]
      * @param {String} [idName=this.itemIdName]
-     * @returns {Object[]}
+     * @return {Object[]}
      */
     _computeItems(parts, items = parts.root, idName = this.itemIdName) {
       // Can't calculate items without parts or the name of the id property.
@@ -216,7 +220,7 @@
      * @param {Object} item
      * @param {Object} parts
      * @param {String} [parentId = this._getParentId(item)]
-     * @returns {Number|undefined}
+     * @return {Number|undefined}
      */
     _getItemDepth(item, parts, parentId = this._getParentId(item)) {
       const parent = this.getParent(item, parts);
@@ -241,7 +245,7 @@
      * @protected
      * @param {Object} item
      * @param {String} [parentIdName=this.itemParentIdName]
-     * @returns {String|Number}
+     * @return {String|Number}
      */
     _getParentId(item, parentIdName = this.itemParentIdName) {
       return (item[parentIdName] || item[parentIdName] === 0) ?
@@ -262,9 +266,9 @@
       return Object.assign({
         open: false,
         state: parentState,
-        depth: this._getItemDepth(item, parts, parentId)
+        depth: this._getItemDepth(item, parts, parentId),
       }, item);
-    }
+    },
   };
 
   /**

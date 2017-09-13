@@ -87,34 +87,34 @@ Custom property | Description | Default
         /* The value to use when state="on" */
         checked: {
           type: Boolean,
-          value: true
+          value: true,
         },
         /* The icon to use when the item is closed */
         closedIcon: {
           type: String,
-          value: 'icons:chevron-right'
+          value: 'icons:chevron-right',
         },
         /* The value to use when state=null */
         indeterminate: {
           type: Boolean,
-          value: false
+          value: false,
         },
         /* This node's data */
         item: Object,
         /* The icon to use when the item is open */
         openIcon: {
           type: String,
-          value: 'icons:expand-more'
+          value: 'icons:expand-more',
         },
         /* The value to use when state="off" */
         unchecked: {
           type: Boolean,
-          value: false
+          value: false,
         },
         /* Holds the value that determines selected status for the item */
         value: {
           type: Boolean,
-          observer: '_valueChanged'
+          observer: '_valueChanged',
         },
         /**
          * Used to determine when this element is in initialization state to prevent extra events
@@ -123,8 +123,8 @@ Custom property | Description | Default
          */
         __init: {
           type: Boolean,
-          value: true
-        }
+          value: true,
+        },
       },
       observers: ['_updateDepth(item.depth)'],
       ready() {
@@ -137,7 +137,7 @@ Custom property | Description | Default
          * @protected
          * @param {Event} event
          */
-        this.$.checkbox._regularTap = function (event) {
+        this.$.checkbox._regularClick = function(event) {
           event.stopPropagation();
           this.state = this.state === 'on' ? 'off' : 'on';
         };
@@ -147,7 +147,7 @@ Custom property | Description | Default
        *
        * @private
        * @param {Boolean} open
-       * @returns {String}
+       * @return {String}
        */
       _getIcon(open) {
         return open ? this.openIcon : this.closedIcon;
@@ -158,21 +158,26 @@ Custom property | Description | Default
        * @private
        * @fires hc-tree-view-behavior#item-state-changed
        * @param {CustomEvent} event
-       * @param {Object} detail
        */
-      _stateChanged(event, detail) {
+      _stateChanged(event) {
+        const detail = event.detail;
         // Prevent firing events if we don't have the necessary data
         if (!this.item) return;
 
         // When a change event happens, inform the list
-        this.fire('item-state-changed', {
-          item: this.item,
-          state: detail.value
-        });
+        this.dispatchEvent(new CustomEvent('item-state-changed', {
+          detail: {
+            item: this.item,
+            state: detail.value,
+          },
+          bubbles: true,
+          composed: true,
+          cancelable: true,
+        }));
       },
       _updateDepth(depth) {
         this.updateStyles({
-          '--hc-tree-node-depth': String(depth)
+          '--hc-tree-node-depth': String(depth),
         });
       },
       /**
@@ -190,13 +195,16 @@ Custom property | Description | Default
           this.__init = false;
           return;
         }
-
-        // When a change event happens, inform the list
-        this.fire('item-selected-changed', {
-          item: this.item,
-          selected: value
-        });
-      }
+        this.dispatchEvent(new CustomEvent('item-selected-changed', {
+          detail: {
+            item: this.item,
+            selected: value,
+          },
+          bubbles: true,
+          composed: true,
+          cancelable: true,
+        }));
+      },
     });
   </script>
 </dom-module>

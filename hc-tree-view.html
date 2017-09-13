@@ -34,13 +34,13 @@ Custom property | Description | Default
       items="[[items]]"
       parts="{{_parts}}"
       item-id-name="[[itemIdName]]"
-      item-parent-id-name="[[itemParentIdName]]"
-      >
+      item-parent-id-name="[[itemParentIdName]]">
       <template>
         <hc-tree-node
           class="item"
-          item="[[item]]"
-        ></hc-tree-node>
+          item="[[item]]">
+          <span slot="label" class="label">[[get(itemLabelPath, item, item.*)]]</span>
+        </hc-tree-node>
       </template>
     </hc-nested-list>
   </template>
@@ -49,7 +49,15 @@ Custom property | Description | Default
     Polymer({
       /* global hc */
       is: 'hc-tree-view',
-      behaviors: [hc.TreeViewBehavior]
+      behaviors: [hc.TreeViewBehavior],
+      properties: {
+        /* The path to the label for the item */
+        itemLabelPath: {
+          type: String,
+          value: 'label',
+          notify: true
+        },
+      },
     });
   </script>
 </dom-module>
