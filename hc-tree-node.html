@@ -71,7 +71,7 @@ Custom property | Description | Default
           checked="[[checked]]"
           unchecked="[[unchecked]]"
           indeterminate="[[indeterminate]]"
-          on-state-changed="_stateChanged"
+          on-click="__userInteraction"
         ></paper-tristate-checkbox>
       </slot>
       <slot name="label">
@@ -133,19 +133,23 @@ Custom property | Description | Default
          *  and to prevent event bubbling.  This is using an annonymous function to keep the correct scope
          *  that is provided by the checkbox element instead of an arrow function which will use the local
          *  scope.
-         *
          * @protected
+         *
          * @param {Event} event
          */
-        this.$.checkbox._regularClick = function(event) {
-          event.stopPropagation();
+        this.$.checkbox._regularTap = function(event) {
           this.state = this.state === 'on' ? 'off' : 'on';
         };
       },
+      attached() {
+        Polymer.RenderStatus.afterNextRender(this, () => {
+          this.__init = false;
+        });
+      },
       /**
        * Returns the openIcon when open is true, otherwise it returns the closedIcon.
+       * @protected
        *
-       * @private
        * @param {Boolean} open
        * @return {String}
        */
@@ -153,28 +157,11 @@ Custom property | Description | Default
         return open ? this.openIcon : this.closedIcon;
       },
       /**
-       * Watches for changes to the value for the checkbox then notifies the parent of selection changes.
+       * Updates the depth of this node to display as if it is nested
+       * @protected
        *
-       * @private
-       * @fires hc-tree-view-behavior#item-state-changed
-       * @param {CustomEvent} event
+       * @param {Number} depth
        */
-      _stateChanged(event) {
-        const detail = event.detail;
-        // Prevent firing events if we don't have the necessary data
-        if (!this.item) return;
-
-        // When a change event happens, inform the list
-        this.dispatchEvent(new CustomEvent('item-state-changed', {
-          detail: {
-            item: this.item,
-            state: detail.value,
-          },
-          bubbles: true,
-          composed: true,
-          cancelable: true,
-        }));
-      },
       _updateDepth(depth) {
         this.updateStyles({
           '--hc-tree-node-depth': String(depth),
@@ -182,23 +169,37 @@ Custom property | Description | Default
       },
       /**
        * Watches for changes to the value for the checkbox then notifies the parent of selection changes.
+       * @protected
        *
-       * @private
        * @fires hc-tree-view-behavior#item-selected-changed
        * @param {Boolean} value
        */
       _valueChanged(value) {
-        // Prevent firing events if we don't have the necessary data
-        if (!this.item) return;
-        // Prevent the initial event that happens upon loading
-        else if (this.__init) {
-          this.__init = false;
-          return;
-        }
+        // Prevent firing events if we don't have the necessary data or if it's still initializing
+        if (!this.item || this.__init) return;
         this.dispatchEvent(new CustomEvent('item-selected-changed', {
           detail: {
             item: this.item,
             selected: value,
+          },
+          bubbles: true,
+          composed: true,
+          cancelable: true,
+        }));
+      },
+      /**
+       * Used to trigger interactions with the tree based on the user.
+       * @private
+       * @fires hc-tree-view-behavior#item-state-changed
+       *
+       * @param {ClickEvent} event
+       */
+      __userInteraction(event) {
+        event.stopPropagation();
+        this.dispatchEvent(new CustomEvent('item-state-changed', {
+          detail: {
+            item: this.item,
+            state: this.item.state,
           },
           bubbles: true,
           composed: true,

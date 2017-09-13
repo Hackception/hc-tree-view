@@ -60,6 +60,10 @@
     observers: ['_computeParts(items, itemIdName, itemParentIdName)'],
     attached() {
       this.addEventListener('item-open-changed', this.itemOpenChanged);
+      this.$.list._propagateUpdates = (item, instance) => {
+        instance.notifyPath('item.state', item.state);
+        instance.notifyPath('item.open', item.open);
+      }
     },
     detached() {
       this.removeEventListener('item-open-changed', this.itemOpenChanged);

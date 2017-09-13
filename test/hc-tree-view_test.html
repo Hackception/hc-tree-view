@@ -179,7 +179,6 @@
             flush(() => {
               const result = Object.keys(element._parts).some((k) => {
                 return element._parts[k].some((itemPart) => {
-                  console.log(itemPart)
                   return itemPart.open;
                 });
               });

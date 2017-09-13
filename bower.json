@@ -4,7 +4,7 @@
   "main": "hc-tree-view.html",
   "dependencies": {
     "polymer": "Polymer/polymer#^1.9 || ^2.0",
-    "iron-list": "PolymerElements/iron-list#^1.0 || ^2.0",
+    "iron-list": "admwx7/iron-list#fix/data-propagation",
     "paper-tristate-checkbox": "Hackception/paper-tristate-checkbox#^0.2.0"
   },
   "devDependencies": {

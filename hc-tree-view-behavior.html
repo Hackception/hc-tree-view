@@ -76,33 +76,37 @@
         });
     },
     /**
-     * Takes an array of one or more items and removes them from the selectedItems array.
+     * Takes an array of one or more items and removes them from the selectedItems array.  If no items are passed
+     *  then all items will be deslected.
      *
-     * @param {Array.<Object>} [items = this.selectedItems]
+     * @param {Array.<Object>} [items]
      * @param {Boolean} [preventUpdate] - blocks the call to _updateState to block template updating
      */
-    deselectItems(items = this.selectedItems, preventUpdate) {
-      let selectedItems = [];
+    deselectItems(items, preventUpdate) {
+      if (!items) {
+        items = this.selectedItems;
+        this.set('selectedItems', []);
+      } else {
+        const getNodeId = (i) => i[this.itemIdName];
+        const itemsToUpdate = [];
 
-      const getNodeId = (i) => i[this.itemIdName];
+        items.forEach((item) => {
+          const index = this.selectedItems.findIndex((i) => {
+            const match = getNodeId(i) === getNodeId(item);
+            if (match) {
+              itemsToUpdate.push(i);
+            }
+            return match;
+          });
+          if (index >= 0) {
+            this.selectedItems.splice(index, 1);
+          }
+        });
 
-      // Map to Ids for perf
-      selectedItems = this.selectedItems.map(getNodeId);
-      const passedItems = items.map(getNodeId);
-
-      // Filter by Ids for perf
-      selectedItems = selectedItems.filter((i) => passedItems.indexOf(i) === -1);
-
-      // Update selectedItems if there was an item removed
-      if (this.selectedItems.length !== selectedItems.length) {
-        const getItemById = (id) => this.selectedItems.find((i) => getNodeId(i) === id);
-
-        // Re-map ids to items if not empty
-        if (selectedItems.length > 0) selectedItems = selectedItems.map(getItemById);
-
-        this.set('selectedItems', selectedItems);
-        if (!preventUpdate) this._updateState(items, 'off');
+        items = itemsToUpdate;
+        this.set('selectedItems', Object.assign([], this.selectedItems));
       }
+      if (!preventUpdate) this._updateState(items, 'off');
     },
     /**
      * Fetches the parent for the given item.
@@ -136,10 +140,6 @@
     itemStateChanged(event) {
       const detail = event.detail;
       const {item, state} = detail;
-
-      // Reject duplicated events
-      if (item.state === state) return;
-      item.state = state;
 
       // Change selected status for parents up the chain
       const parent = this._updateParents(item, state);
@@ -251,9 +251,12 @@
     _updateState(items, state, parts = this._parts) {
       if (!items || !parts) return;
       // Filter items to remove children that have a parent in the array
-      items.filter((item) => !items.some((i) => i[this.itemIdName] === item[this.itemParentIdName])).
-        // Pass the filtered items into _updateChildren
-        forEach((item) => {
+      items = items.filter((item) => {
+        item.state = state;
+        return !items.some((i) => i[this.itemIdName] === item[this.itemParentIdName]);
+      });
+      // Pass the filtered items into _updateChildren
+      items.forEach((item) => {
           // Find the item in the parts object
           const parentId = this.$.list._getParentId(item);
           const partItem = parts[parentId].find((i) => i[this.itemIdName] === item[this.itemIdName]);
