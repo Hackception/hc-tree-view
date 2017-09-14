@@ -116,15 +116,6 @@ Custom property | Description | Default
           type: Boolean,
           observer: '_valueChanged',
         },
-        /**
-         * Used to determine when this element is in initialization state to prevent extra events
-         *
-         * @private
-         */
-        __init: {
-          type: Boolean,
-          value: true,
-        },
       },
       observers: ['_updateDepth(item.depth)'],
       ready() {
@@ -140,11 +131,6 @@ Custom property | Description | Default
         this.$.checkbox._regularTap = function(event) {
           this.state = this.state === 'on' ? 'off' : 'on';
         };
-      },
-      attached() {
-        Polymer.RenderStatus.afterNextRender(this, () => {
-          this.__init = false;
-        });
       },
       /**
        * Returns the openIcon when open is true, otherwise it returns the closedIcon.
@@ -176,7 +162,12 @@ Custom property | Description | Default
        */
       _valueChanged(value) {
         // Prevent firing events if we don't have the necessary data or if it's still initializing
-        if (!this.item || this.__init) return;
+        if (!this.item) return;
+        if (!this.__initComplete) {
+          this.__initComplete = true;
+          return;
+        }
+
         this.dispatchEvent(new CustomEvent('item-selected-changed', {
           detail: {
             item: this.item,
@@ -184,7 +175,6 @@ Custom property | Description | Default
           },
           bubbles: true,
           composed: true,
-          cancelable: true,
         }));
       },
       /**
@@ -203,7 +193,6 @@ Custom property | Description | Default
           },
           bubbles: true,
           composed: true,
-          cancelable: true,
         }));
       },
     });

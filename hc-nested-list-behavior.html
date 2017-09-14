@@ -57,7 +57,12 @@
         computed: '_computeItems(parts)',
       },
     },
-    observers: ['_computeParts(items, itemIdName, itemParentIdName)'],
+    observers: [
+      '_computeParts(items, itemIdName, itemParentIdName)',
+    ],
+    ready() {
+      this.itemOpenChanged = this.itemOpenChanged.bind(this);
+    },
     attached() {
       this.addEventListener('item-open-changed', this.itemOpenChanged);
       this.$.list._propagateUpdates = (item, instance) => {
@@ -117,6 +122,7 @@
      * @param {Object} detail
      * @param {String} [idName=this.itemIdName]
      * @param {Object} [parts = this.parts]
+     * @return {Promise}
      */
     itemOpenChanged(event, idName = this.itemIdName, parts = this.parts) {
       // Block interactions while loading items
@@ -140,7 +146,7 @@
         } else items[i].open = false; // If it's not the item we want, ensure it's closed
       }
 
-      (new Promise((res) => {
+      return (new Promise((res) => {
         if (item) {
           // fetch children and update when done, when there's an item
           const ids = Object.keys(parts);
@@ -155,7 +161,7 @@
             res(parts);
           });
         } else res(parts);
-      })).then(() => {
+      })).then((parts) => {
         this.set('parts', Object.assign({}, parts));
         this.isLoading = false;
       });

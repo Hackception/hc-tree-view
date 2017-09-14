@@ -42,12 +42,10 @@
       this.addEventListener('item-selected-changed', this.itemSelectedChanged);
       this.addEventListener('item-state-changed', this.itemStateChanged);
     },
-
     detached() {
       this.removeEventListener('item-selected-changed', this.itemSelectedChanged);
       this.removeEventListener('item-state-changed', this.itemStateChanged);
     },
-
     /**
      * Collapses the tree while maintaining the current selection states
      *
@@ -104,7 +102,9 @@
         });
 
         items = itemsToUpdate;
-        this.set('selectedItems', Object.assign([], this.selectedItems));
+        if (items.length) {
+          this.set('selectedItems', Object.assign([], this.selectedItems));
+        }
       }
       if (!preventUpdate) this._updateState(items, 'off');
     },
@@ -121,10 +121,9 @@
      * Makes calls to select or deselect the item based on the selected in the event.
      *
      * @listens hc-tree-view-behavior#item-selected-changed
-     * @param {CustomEvent} [event]
+     * @param {CustomEvent} event
      */
-    itemSelectedChanged(event) {
-      const detail = event.detail;
+    itemSelectedChanged({detail}) {
       if (detail.selected) {
         this.selectItems([detail.item], true);
       } else {
@@ -137,9 +136,12 @@
      * @listens hc-tree-view-behavior#item-state-changed
      * @param {CustomEvent} event
      */
-    itemStateChanged(event) {
-      const detail = event.detail;
+    itemStateChanged({detail}) {
       const {item, state} = detail;
+
+      if (item.state !== state) {
+        item.state = state;
+      }
 
       // Change selected status for parents up the chain
       const parent = this._updateParents(item, state);
@@ -152,11 +154,12 @@
       }
 
       // Change selected status for children, even if they are hidden.
-      if ( state === 'on') {
+      if (state === 'on') {
         this.selectItems(this._updateChildren(item, state), true);
       } else {
         this.deselectItems(this._updateChildren(item, state), true);
       }
+
       this.debounce('itemStateChanged', () => {
         this.set('_parts', Object.assign({}, this._parts));
       });
@@ -259,7 +262,9 @@
       items.forEach((item) => {
           // Find the item in the parts object
           const parentId = this.$.list._getParentId(item);
-          const partItem = parts[parentId].find((i) => i[this.itemIdName] === item[this.itemIdName]);
+          const partItem = parts[parentId].find((i) => {
+            return i[this.itemIdName] === item[this.itemIdName];
+          });
           // Trigger a state change that will propagate
           this.itemStateChanged({
             detail: {

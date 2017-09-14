@@ -33,6 +33,9 @@ Custom property | Description | Default
         /* The item holding all data */
         item: Object,
       },
+      ready() {
+        this.fireOpenEvent = this.fireOpenEvent.bind(this);
+      },
       attached() {
         this.addEventListener('click', this.fireOpenEvent);
       },

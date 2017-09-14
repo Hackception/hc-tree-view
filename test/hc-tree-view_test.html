@@ -35,134 +35,6 @@
         });
 
         // Public Functions
-        describe('deselectItems(items)', () => {
-          beforeEach(() => element._updateState = sinon.spy());
-
-          it('should remove all items in items from selectedItems', () => {
-            const item = {id: 'test'};
-            element.selectedItems = [item];
-            element.deselectItems([item]);
-            expect(element.set.calledWithMatch('selectedItems', [])).to.equal(true);
-          });
-          it('should remove only passed items in items from selectedItems when no children associated', () => {
-            const item = {id: 'test'};
-            const item2 = {id: 'test2'};
-            element.selectedItems = [item, item2];
-            element.deselectItems([item]);
-            expect(element.set.calledWithMatch('selectedItems', [item2])).to.equal(true);
-          });
-          it('should call _updateState when !preventUpdate', () => {
-            const item = {id: 'test'};
-            element.selectedItems = [item];
-            element.deselectItems([item]);
-            expect(element._updateState.calledWithMatch([item], 'off')).to.equal(true);
-          });
-          it('should not call _updateState when preventUpdate', () => {
-            const item = {id: 'test'};
-            element.selectedItems = [item];
-            element.deselectItems([item], true);
-            expect(element._updateState.called).to.equal(false);
-          });
-          it('should not update selectedItems if no items were removed', () => {
-            element.deselectItems([]);
-            expect(element.set.called).to.equal(false);
-          });
-        });
-        describe('getParent(item)', () => {
-          it('should call getParent on the list', () => {
-            const item = {id: 'test'};
-            element.$.list.getParent = sinon.spy();
-            element.getParent(item);
-            expect(element.$.list.getParent.calledWithMatch(item)).to.equal(true);
-          });
-        });
-        describe('itemSelectedChanged(event, detail)', () => {
-          const item = {id: 'test'};
-          beforeEach(() => {
-            element.selectItems = sinon.spy();
-            element.deselectItems = sinon.spy();
-          });
-
-          it('should call selectItems with the item when detail.selected', () => {
-            element.itemSelectedChanged(null, {item, selected: true});
-            expect(element.selectItems.calledWithMatch([item], true)).to.equal(true);
-            expect(element.deselectItems.calledWithMatch([item], true)).to.equal(false);
-          });
-          it('should call deselectItems with the item when detail.selected', () => {
-            element.itemSelectedChanged(null, {item, selected: false});
-            expect(element.selectItems.calledWithMatch([item], true)).to.equal(false);
-            expect(element.deselectItems.calledWithMatch([item], true)).to.equal(true);
-          });
-        });
-        describe('itemStateChanged(event, detail)', () => {
-          let item, spy;
-
-          beforeEach(() => {
-            spy = sinon.spy(element, 'debounce');
-            element.$.list._computeItems = () => {};
-            element.selectItems = sinon.spy();
-            element.deselectItems = sinon.spy();
-            element._updateParts = sinon.spy();
-            element._updateParents = sinon.spy();
-            element._updateChildren = sinon.stub();
-            element._updateChildren.returns([{id: 'test'}]);
-            item = items[1];
-          });
-
-          it('should not call _updateChildren when item.state is already set', () => {
-            const state = 'on';
-            item.state = state;
-            expect(element._updateChildren.called).to.equal(false);
-          });
-          it('should update item state', () => {
-            const state = 'on';
-            element.itemStateChanged(null, {item, state});
-            expect(item.state).to.equal(state);
-          });
-          it('should call _updateParents', () => {
-            const state = 'on';
-            element.itemStateChanged(null, {item, state});
-            expect(element._updateParents.calledWithMatch(item, state)).to.equal(true);
-          });
-          it('should call selectItems when state is changed to "on"', () => {
-            const state = 'on';
-            element.itemStateChanged(null, {item, state});
-            expect(element.selectItems.calledWithMatch([{id: 'test'}], true)).to.equal(true);
-          });
-          it('should call deselectItems when state is changed to !"on"', () => {
-            const state = 'off';
-            item.state = 'on';
-            element.itemStateChanged(null, {item, state});
-            expect(element.deselectItems.calledWithMatch([{id: 'test'}], true)).to.equal(true);
-          });
-          it('should debounce', () => {
-            const state = 'on';
-            element.itemStateChanged(null, {item, state});
-            expect(element.debounce.calledOnce).to.equal(true);
-          })
-          it('should set _parts', done => {
-            const state = 'on';
-            element._parts = parts;
-            element.itemStateChanged(null, {item, state});
-            flush(() => {
-              expect(setSpy.calledWithMatch('_parts', parts)).to.equal(true);
-              done();
-            });
-          });
-        });
-        describe('reset()', () => {
-          beforeEach(() => element.deselectItems = sinon.spy());
-
-          it('should call deselectItems', () => {
-            element.reset();
-            expect(element.deselectItems.calledOnce).to.equal(true);
-          });
-          it('should call set for items', () => {
-            element.items = items;
-            element.reset();
-            expect(setSpy.calledWithMatch('items', items)).to.equal(true);
-          });
-        });
         describe('collapse()', () => {
           beforeEach(() => {
             sinon.spy(element, 'debounce');
@@ -216,7 +88,135 @@
               done();
             });
           });
-        })
+        });
+        describe('deselectItems(items)', () => {
+          beforeEach(() => element._updateState = sinon.spy());
+
+          it('should remove all items in items from selectedItems', () => {
+            const item = {id: 'test'};
+            element.selectedItems = [item];
+            element.deselectItems([item]);
+            expect(element.set.calledWithMatch('selectedItems', [])).to.equal(true);
+          });
+          it('should remove only passed items in items from selectedItems when no children associated', () => {
+            const item = {id: 'test'};
+            const item2 = {id: 'test2'};
+            element.selectedItems = [item, item2];
+            element.deselectItems([item]);
+            expect(element.set.calledWithMatch('selectedItems', [item2])).to.equal(true);
+          });
+          it('should call _updateState when !preventUpdate', () => {
+            const item = {id: 'test'};
+            element.selectedItems = [item];
+            element.deselectItems([item]);
+            expect(element._updateState.calledWithMatch([item], 'off')).to.equal(true);
+          });
+          it('should not call _updateState when preventUpdate', () => {
+            const item = {id: 'test'};
+            element.selectedItems = [item];
+            element.deselectItems([item], true);
+            expect(element._updateState.called).to.equal(false);
+          });
+          it('should not update selectedItems if no items were removed', () => {
+            element.deselectItems([]);
+            expect(element.set.called).to.equal(false);
+          });
+        });
+        describe('getParent(item)', () => {
+          it('should call getParent on the list', () => {
+            const item = {id: 'test'};
+            element.$.list.getParent = sinon.spy();
+            element.getParent(item);
+            expect(element.$.list.getParent.calledWithMatch(item)).to.equal(true);
+          });
+        });
+        describe('itemSelectedChanged(event)', () => {
+          const item = {id: 'test'};
+          beforeEach(() => {
+            element.selectItems = sinon.spy();
+            element.deselectItems = sinon.spy();
+          });
+
+          it('should call selectItems with the item when detail.selected', () => {
+            element.itemSelectedChanged({detail: { item, selected: true, }});
+            expect(element.selectItems.calledWithMatch([item], true)).to.equal(true);
+            expect(element.deselectItems.calledWithMatch([item], true)).to.equal(false);
+          });
+          it('should call deselectItems with the item when detail.selected', () => {
+            element.itemSelectedChanged({detail: { item, selected: false, }});
+            expect(element.selectItems.calledWithMatch([item], true)).to.equal(false);
+            expect(element.deselectItems.calledWithMatch([item], true)).to.equal(true);
+          });
+        });
+        describe('itemStateChanged(event, detail)', () => {
+          let item, spy;
+
+          beforeEach(() => {
+            spy = sinon.spy(element, 'debounce');
+            element.$.list._computeItems = () => {};
+            element.selectItems = sinon.spy();
+            element.deselectItems = sinon.spy();
+            element._updateParts = sinon.spy();
+            element._updateParents = sinon.spy();
+            element._updateChildren = sinon.stub();
+            element._updateChildren.returns([{id: 'test'}]);
+            item = items[1];
+          });
+
+          it('should not call _updateChildren when item.state is already set', () => {
+            const state = 'on';
+            item.state = state;
+            expect(element._updateChildren.called).to.equal(false);
+          });
+          it('should update item state', () => {
+            const state = 'on';
+            element.itemStateChanged({ detail: {item, state} });
+            expect(item.state).to.equal(state);
+          });
+          it('should call _updateParents', () => {
+            const state = 'on';
+            element.itemStateChanged({ detail: {item, state} });
+            expect(element._updateParents.calledWithMatch(item, state)).to.equal(true);
+          });
+          it('should call selectItems when state is changed to "on"', () => {
+            const state = 'on';
+            element.itemStateChanged({ detail: {item, state} });
+            expect(element.selectItems.calledWithMatch([{id: 'test'}], true)).to.equal(true);
+          });
+          it('should call deselectItems when state is changed to !"on"', () => {
+            const state = 'off';
+            item.state = 'on';
+            element.itemStateChanged({ detail: {item, state} });
+            expect(element.deselectItems.calledWithMatch([{id: 'test'}], true)).to.equal(true);
+          });
+          it('should debounce', () => {
+            const state = 'on';
+            element.itemStateChanged({ detail: {item, state} });
+            expect(element.debounce.calledOnce).to.equal(true);
+          })
+          it('should set _parts', done => {
+            const state = 'on';
+            element._parts = parts;
+            element.itemStateChanged({ detail: {item, state} });
+            flush(() => {
+              expect(setSpy.calledWithMatch('_parts', parts)).to.equal(true);
+              done();
+            });
+          });
+        });
+        describe('reset()', () => {
+          beforeEach(() => element.deselectItems = sinon.spy());
+
+          it('should call deselectItems', () => {
+            element.reset();
+            expect(element.deselectItems.calledOnce).to.equal(true);
+          });
+          it('should call set for items', () => {
+            element.items = items;
+            element.reset();
+            expect(setSpy.calledWithMatch('items', items)).to.equal(true);
+          });
+        });
         describe('selectItems(items)', () => {
           beforeEach(() => element._updateState = sinon.spy());
 
@@ -334,14 +334,22 @@
             element.$.list.parts = parts;
           });
 
-          it('should call _updateChildren all items that do not have a parent in items', () => {
-            const subItems = [parts.root[0], parts[parts.root[0].id][0], parts[parts.root[1].id][0]];
+          it('should call itemStateChanged on all of the "root" items', () => {
+            const subItems = [
+              parts.root[0],
+              parts[parts.root[0].id][0],
+              parts[parts.root[1].id][0],
+            ];
             element._updateState(subItems, state, parts);
             expect(element.itemStateChanged.callCount).to.equal(2);
-            expect(element.itemStateChanged.calledWithMatch(null, {item: subItems[0], state})).
-              to.equal(true);
-            expect(element.itemStateChanged.calledWithMatch(null, {item: subItems[2], state})).
-              to.equal(true);
+            expect(element.itemStateChanged.calledWithMatch({ detail:  {
+              item: subItems[0],
+              state,
+            }})).to.equal(true);
+            expect(element.itemStateChanged.calledWithMatch({ detail: {
+              item: subItems[2],
+              state,
+            }})).to.equal(true);
           });
           it('should do nothing when items is undefined', () =>
             expect(element._updateState).to.not.throw(TypeError));

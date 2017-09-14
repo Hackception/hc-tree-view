@@ -36,7 +36,7 @@
             element.item = {test: 'test'};
             event.stopPropagation = sinon.spy();
             element.set = sinon.spy();
-            fireSpy = sinon.spy(element, 'fire');
+            fireSpy = sinon.spy(element, 'dispatchEvent');
           });
 
           it('should block event propagation', () => {
@@ -45,12 +45,22 @@
           });
           it('should fire a item-open-changed event providing the item data', () => {
             element.fireOpenEvent(event);
-            expect(fireSpy.called).to.equal(true);
-            expect(fireSpy.calledWithMatch('item-open-changed', {item: element.item, open: !element.item.open})).
-              to.equal(true);
+            const e = new CustomEvent('item-open-changed', {
+              detail: {
+                item: element.item,
+                open: !element.item.open,
+              },
+              bubbles: true,
+              composed: true,
+              cancelable: true,
+            });
+            expect(fireSpy.calledWithMatch(e)).to.equal(true);
           });
           it('should be bound to a click event', done => {
             element.fireOpenEvent = sinon.spy();
+            const parent = element.parentNode;
+            parent.removeChild(element);
+            parent.appendChild(element);
             element.querySelector('#header').click();
 
             flush(() => {
