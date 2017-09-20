@@ -38,6 +38,10 @@
        */
       _parts: Object,
     },
+    ready() {
+      this.itemSelectedChanged = this.itemSelectedChanged.bind(this);
+      this.itemStateChanged = this.itemStateChanged.bind(this);
+    },
     attached() {
       this.addEventListener('item-selected-changed', this.itemSelectedChanged);
       this.addEventListener('item-state-changed', this.itemStateChanged);
@@ -128,6 +132,9 @@
         this.selectItems([detail.item], true);
       } else {
         this.deselectItems([detail.item], true);
+      }
+      if (detail.state !== undefined && Polymer.Element) {
+        this._updateState([detail.item], detail.state)
       }
     },
     /**
@@ -282,13 +289,15 @@
    * @type {Object}
    * @property {Object} item - the item to change selection status for
    * @property {Boolean} selection - the updated selection status
+   * @property {String} [state] - triggers a state update, can be 'on', 'off', or null
    */
   /**
    * Event for changing the state of a tree node
    *
+   * @deprecated
    * @event hc-tree-view-behavior#item-state-changed
    * @type {Object}
    * @property {Object} item - the item to change state for
-   * @property {Boolean} state - the updated state
+   * @property {String} state - the updated state, can be 'on', 'off', or null
    */
 </script>

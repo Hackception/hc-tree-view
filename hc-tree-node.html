@@ -72,6 +72,7 @@ Custom property | Description | Default
           unchecked="[[unchecked]]"
           indeterminate="[[indeterminate]]"
           on-click="__userInteraction"
+          disable-indeterminate
         ></paper-tristate-checkbox>
       </slot>
       <slot name="label">
@@ -172,6 +173,7 @@ Custom property | Description | Default
           detail: {
             item: this.item,
             selected: value,
+            state: this.item.state,
           },
           bubbles: true,
           composed: true,
@@ -186,14 +188,17 @@ Custom property | Description | Default
        */
       __userInteraction(event) {
         event.stopPropagation();
-        this.dispatchEvent(new CustomEvent('item-state-changed', {
-          detail: {
-            item: this.item,
-            state: this.item.state,
-          },
-          bubbles: true,
-          composed: true,
-        }));
+        // Resort to the 1.x methods
+        if (!Polymer.element) {
+          this.dispatchEvent(new CustomEvent('item-state-changed', {
+            detail: {
+              item: this.item,
+              state: this.item.state,
+            },
+            bubbles: true,
+            composed: true,
+          }));
+        }
       },
     });
   </script>
