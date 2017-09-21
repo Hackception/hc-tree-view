@@ -32,38 +32,45 @@ Custom property | Description | Default
       }
     </style>
 
-    <hc-nested-list
-      id="list"
-      items="[[items]]"
-      parts="{{_parts}}"
-      item-id-name="[[itemIdName]]"
-      item-parent-id-name="[[itemParentIdName]]">
-      <template>
-        <div>
-          <!-- Screw you shadow dom v0...just screw you... -->
-          <template is="dom-if" if="[[__v1]]">
-            <hc-tree-node
-              class="item"
-              item$="[[item]]">
-              <span slot="label"
-                class="label">
-                [[get(itemLabelPath, item, item.*)]]
-              </span>
-            </hc-tree-node>
-          </template>
-          <template is="dom-if" if="[[!__v1]]">
-            <hc-tree-node
-              class="item"
-              item="[[item]]">
-              <span slot="label"
-                class="label">
-                [[get(itemLabelPath, item, item.*)]]
-              </span>
-            </hc-tree-node>
-          </template>
-        </div>
-      </template>
-    </hc-nested-list>
+    <!-- Screw you shadow dom v0...just screw you... -->
+    <template is="dom-if" if="[[__v1]]">
+      <hc-nested-list
+        id="list"
+        items="[[items]]"
+        parts="{{_parts}}"
+        item-id-name="[[itemIdName]]"
+        item-parent-id-name="[[itemParentIdName]]">
+        <template>
+          <hc-tree-node
+            class="item"
+            item$="[[item]]">
+            <span slot="label"
+              class="label">
+              [[get(itemLabelPath, item, item.*)]]
+            </span>
+          </hc-tree-node>
+        </template>
+      </hc-nested-list>
+    </template>
+    <template is="dom-if" if="[[!__v1]]">
+      <hc-nested-list
+        id="list"
+        items="[[items]]"
+        parts="{{_parts}}"
+        item-id-name="[[itemIdName]]"
+        item-parent-id-name="[[itemParentIdName]]">
+        <template>
+          <hc-tree-node
+            class="item"
+            item="[[item]]">
+            <span slot="label"
+              class="label">
+              [[get(itemLabelPath, item, item.*)]]
+            </span>
+          </hc-tree-node>
+        </template>
+      </hc-nested-list>
+    </template>
   </template>
 
   <script>
@@ -76,7 +83,7 @@ Custom property | Description | Default
         itemLabelPath: {
           type: String,
           value: 'label',
-          notify: true
+          notify: true,
         },
         /* Determine if we are in v1 or v0 shadow dom so we can conditionally stamp */
         __v1: {
@@ -85,6 +92,11 @@ Custom property | Description | Default
             return Boolean(Polymer.Element);
           },
         }
+      },
+      ready() {
+        Polymer.RenderStatus.afterNextRender(this, () => {
+          this.list = Polymer.dom(this.root).querySelector('#list');
+        });
       },
     });
   </script>

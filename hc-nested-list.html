@@ -48,8 +48,7 @@ Custom property | Description | Default
     <iron-list
       id="list"
       items="[[_items]]"
-      as="item"
-      >
+      as="item">
       <slot></slot>
     </iron-list>
   </template>
@@ -58,7 +57,7 @@ Custom property | Description | Default
     Polymer({
       /* global hc */
       is: 'hc-nested-list',
-      behaviors: [hc.NestedListBehavior]
+      behaviors: [hc.NestedListBehavior],
     });
   </script>
 </dom-module>

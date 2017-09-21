@@ -25,6 +25,11 @@
       },
       /* The list of items to display in the tree, using a flat structure */
       items: Array,
+      /* The hc-nested-list element to use for rendering */
+      list: {
+        type: Object,
+        notify: true,
+      },
       /* The list of all selected items without duplicates */
       selectedItems: {
         type: Array,
@@ -119,7 +124,7 @@
      * @return {Object|undefined}
      */
     getParent(item) {
-      return this.$.list.getParent(item);
+      return this.list.getParent(item);
     },
     /**
      * Makes calls to select or deselect the item based on the selected in the event.
@@ -267,19 +272,19 @@
       });
       // Pass the filtered items into _updateChildren
       items.forEach((item) => {
-          // Find the item in the parts object
-          const parentId = this.$.list._getParentId(item);
-          const partItem = parts[parentId].find((i) => {
-            return i[this.itemIdName] === item[this.itemIdName];
-          });
-          // Trigger a state change that will propagate
-          this.itemStateChanged({
-            detail: {
-              item: partItem,
-              state,
-            },
-          });
+        // Find the item in the parts object
+        const parentId = this.list._getParentId(item);
+        const partItem = parts[parentId].find((i) => {
+          return i[this.itemIdName] === item[this.itemIdName];
         });
+        // Trigger a state change that will propagate
+        this.itemStateChanged({
+          detail: {
+            item: partItem,
+            state,
+          },
+        });
+      });
     },
   };
   /**
