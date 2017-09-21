@@ -2,6 +2,7 @@
   "name": "hc-tree-view",
   "description": "An optimized tree-view based on a flat data structure.",
   "main": "hc-tree-view.html",
+  "version": "v0.5.0",
   "dependencies": {
     "polymer": "Polymer/polymer#^1.9 || ^2.0",
     "iron-list": "admwx7/iron-list#fix/data-propagation",
