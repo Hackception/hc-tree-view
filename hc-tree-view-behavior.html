@@ -261,28 +261,29 @@
      * @private
      * @param {Array.<Object>} items
      * @param {String} state
-     * @param {Object} [parts = this._parts]
      */
-    _updateState(items, state, parts = this._parts) {
-      if (!items || !parts) return;
-      // Filter items to remove children that have a parent in the array
-      items = items.filter((item) => {
-        item.state = state;
-        return !items.some((i) => i[this.itemIdName] === item[this.itemParentIdName]);
-      });
-      // Pass the filtered items into _updateChildren
-      items.forEach((item) => {
-        // Find the item in the parts object
-        const parentId = this.list._getParentId(item);
-        const partItem = parts[parentId].find((i) => {
-          return i[this.itemIdName] === item[this.itemIdName];
+    _updateState(items, state) {
+      if (!items || !this._parts) return;
+      this.debounce('_updateState', () => {
+        // Filter items to remove children that have a parent in the array
+        items = items.filter((item) => {
+          item.state = state;
+          return !items.some((i) => i[this.itemIdName] === item[this.itemParentIdName]);
         });
-        // Trigger a state change that will propagate
-        this.itemStateChanged({
-          detail: {
-            item: partItem,
-            state,
-          },
+        // Pass the filtered items into _updateChildren
+        items.forEach((item) => {
+          // Find the item in the parts object
+          const parentId = this.list._getParentId(item);
+          const partItem = this._parts[parentId].find((i) => {
+            return i[this.itemIdName] === item[this.itemIdName];
+          });
+          // Trigger a state change that will propagate
+          this.itemStateChanged({
+            detail: {
+              item: partItem,
+              state,
+            },
+          });
         });
       });
     },
