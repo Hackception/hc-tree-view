@@ -25,7 +25,7 @@
 
         beforeEach(() => {
           element = fixture('basic');
-          fireSpy = sinon.spy(element, 'fire');
+          fireSpy = sinon.spy(element, 'dispatchEvent');
         });
 
         // Lifecycle Functions
@@ -63,20 +63,6 @@
             element.$.checkbox.click();
             expect(element.item.state).to.equal('on');
           });
-          it('should prevent bubbling when _regularTap', done => {
-            const spy = sinon.spy();
-            element.item = {
-              state: 'off'
-            };
-            element.addEventListener('tap', () => {
-              spy();
-            });
-            element.$.checkbox.click();
-            flush(() => {
-              expect(spy.called).to.equal(false);
-              done();
-            })
-          });
         });
         // Private Functions
         describe('_getIcon(open)', () => {
@@ -85,50 +71,63 @@
           it('should return closedIcon when open is false', () =>
             expect(element._getIcon(false)).to.equal(element.closedIcon));
         });
-        describe('_stateChanged(event, detail)', () => {
-          const event = {};
-
-          it('should do nothing when there is no item', () => {
-            element._stateChanged();
-            expect(fireSpy.called).to.equal(false);
-          });
-          it('should fire a item-state-changed event', () => {
-            element.item = {test: 'test'};
-            event.detail = {
-              value: 'off'
-            };
-            element._stateChanged(event, event.detail);
-            expect(fireSpy.calledWith('item-state-changed', {
-              item: element.item,
-              state: event.detail.value
-            })).to.equal(true);
-          });
-        });
         describe('_valueChanged(value)', () => {
           it('should do nothing when there is no item', () => {
             element._valueChanged();
             expect(fireSpy.called).to.equal(false);
           });
-          it('should reject the first run after item is set, while __init is true', () => {
+          it('should reject the first run after item is set, while __initComplete is false', () => {
             element._valueChanged();
             expect(fireSpy.called).to.equal(false);
-            expect(element.__init).to.equal(true);
+            expect(element.__initComplete).not.to.be.ok;
             element.item = {test: 'test'};
 
             fireSpy.reset();
             element._valueChanged();
-            expect(element.__init).to.equal(false);
+            expect(element.__initComplete).to.be.ok;
             expect(fireSpy.called).to.equal(false);
           });
           it('should fire the item-selected-changed event', () => {
             element.item = {test: 'test'};
+            const e = new CustomEvent('item-selected-changed', {
+              detail: {
+                item: element.item,
+                selected: true,
+              },
+              bubbles: true,
+              composed: true,
+            });
             // Call twice since the first one is rejected
             element._valueChanged(true);
             element._valueChanged(true);
-            expect(fireSpy.calledWith('item-selected-changed', {
-              item: element.item,
-              selected: true
-            })).to.equal(true);
+            expect(fireSpy.calledWith(e)).to.equal(true);
+          });
+        });
+        describe('__userInteraction(event)', () => {
+          let event;
+
+          beforeEach(() => {
+            element.item = {
+              state: 'on',
+            };
+            event = new CustomEvent('item-state-changed', {
+              detail: {
+                item: element.item,
+                state: element.item.state,
+              },
+              bubbles: true,
+              composed: true,
+            });
+          });
+
+          it('should stop event propagation', () => {
+            event.stopPropagation = sinon.spy();
+            element.__userInteraction(event);
+            expect(event.stopPropagation).to.have.been.called;
+          });
+          it('should dispatch an item-state-changed event', () => {
+            element.__userInteraction(event);
+            expect(fireSpy).to.have.been.calledWithMatch(event);
           });
         });
       });

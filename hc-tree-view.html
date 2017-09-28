@@ -27,29 +27,77 @@ Custom property | Description | Default
       .item {
         @apply --hc-tree-view-item;
       }
+      [hidden] {
+        display: none;
+      }
     </style>
 
-    <hc-nested-list
-      id="list"
-      items="[[items]]"
-      parts="{{_parts}}"
-      item-id-name="[[itemIdName]]"
-      item-parent-id-name="[[itemParentIdName]]"
-      >
-      <template>
-        <hc-tree-node
-          class="item"
-          item="[[item]]"
-        ></hc-tree-node>
-      </template>
-    </hc-nested-list>
+    <!-- Screw you shadow dom v0...just screw you... -->
+    <template is="dom-if" if="[[__v1]]">
+      <hc-nested-list
+        id="list"
+        items="[[items]]"
+        parts="{{_parts}}"
+        item-id-name="[[itemIdName]]"
+        item-parent-id-name="[[itemParentIdName]]">
+        <template>
+          <hc-tree-node
+            class="item"
+            item$="[[item]]">
+            <span slot="label"
+              class="label">
+              [[get(itemLabelPath, item, item.*)]]
+            </span>
+          </hc-tree-node>
+        </template>
+      </hc-nested-list>
+    </template>
+    <template is="dom-if" if="[[!__v1]]">
+      <hc-nested-list
+        id="list"
+        items="[[items]]"
+        parts="{{_parts}}"
+        item-id-name="[[itemIdName]]"
+        item-parent-id-name="[[itemParentIdName]]">
+        <template>
+          <hc-tree-node
+            class="item"
+            item="[[item]]">
+            <span slot="label"
+              class="label">
+              [[get(itemLabelPath, item, item.*)]]
+            </span>
+          </hc-tree-node>
+        </template>
+      </hc-nested-list>
+    </template>
   </template>
 
   <script>
     Polymer({
       /* global hc */
       is: 'hc-tree-view',
-      behaviors: [hc.TreeViewBehavior]
+      behaviors: [hc.TreeViewBehavior],
+      properties: {
+        /* The path to the label for the item */
+        itemLabelPath: {
+          type: String,
+          value: 'label',
+          notify: true,
+        },
+        /* Determine if we are in v1 or v0 shadow dom so we can conditionally stamp */
+        __v1: {
+          type: Boolean,
+          value() {
+            return Boolean(Polymer.Element);
+          },
+        }
+      },
+      ready() {
+        Polymer.RenderStatus.afterNextRender(this, () => {
+          this.list = Polymer.dom(this.root).querySelector('#list');
+        });
+      },
     });
   </script>
 </dom-module>
