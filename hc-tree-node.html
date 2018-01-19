@@ -71,7 +71,7 @@ Custom property | Description | Default
           checked="[[checked]]"
           unchecked="[[unchecked]]"
           indeterminate="[[indeterminate]]"
-          on-click="__userInteraction"
+          on-click="__stopClickEvent"
           disable-indeterminate
         ></paper-tristate-checkbox>
       </slot>
@@ -117,21 +117,21 @@ Custom property | Description | Default
           type: Boolean,
           observer: '_valueChanged',
         },
+        __isPolymer1: {
+          type: Boolean,
+          value() {
+            return !Polymer.Element;
+          },
+        },
       },
-      observers: ['_updateDepth(item.depth)'],
-      ready() {
-        /**
-         * Overload the default tap functionality to prevent user clicks from setting indeterminate state,
-         *  and to prevent event bubbling.  This is using an annonymous function to keep the correct scope
-         *  that is provided by the checkbox element instead of an arrow function which will use the local
-         *  scope.
-         * @protected
-         *
-         * @param {Event} event
-         */
-        this.$.checkbox._regularTap = function(event) {
-          this.state = this.state === 'on' ? 'off' : 'on';
-        };
+      observers: [
+        '_updateDepth(item.depth)',
+        '__nodeSelected(item.state)',
+      ],
+      __stopClickEvent(event) {
+        // NOTE: This helper function is needed to avoid expansion upon selection of the
+        // selection box.
+        event.stopPropagation();
       },
       /**
        * Returns the openIcon when open is true, otherwise it returns the closedIcon.
@@ -164,7 +164,7 @@ Custom property | Description | Default
       _valueChanged(value) {
         // Prevent firing events if we don't have the necessary data or if it's still initializing
         if (!this.item) return;
-        if (!this.__initComplete) {
+        if(!this.__isPolymer1 && !this.__initComplete) {
           this.__initComplete = true;
           return;
         }
@@ -186,14 +186,13 @@ Custom property | Description | Default
        *
        * @param {ClickEvent} event
        */
-      __userInteraction(event) {
-        event.stopPropagation();
-        // Resort to the 1.x methods
-        if (!Polymer.element) {
+      __nodeSelected(state) {        
+        if (this.__isPolymer1) {
+          // Resort to the 1.x methods
           this.dispatchEvent(new CustomEvent('item-state-changed', {
             detail: {
               item: this.item,
-              state: this.item.state,
+              state,
             },
             bubbles: true,
             composed: true,

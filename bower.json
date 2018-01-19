@@ -18,8 +18,7 @@
     "1.x": {
       "dependencies": {
         "polymer": "Polymer/polymer#^1.9",
-        "iron-list": "admwx7/iron-list#fix/issue-300",
-        "paper-tristate-checkbox": "Hackception/paper-tristate-checkbox#^0.2.0"
+        "iron-list": "admwx7/iron-list#fix/issue-300"
       },
       "devDependencies": {
         "iron-component-page": "PolymerElements/iron-component-page#^1.0.0",
