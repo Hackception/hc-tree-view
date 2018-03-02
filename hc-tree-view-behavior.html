@@ -33,8 +33,13 @@
       /* The list of all selected items without duplicates */
       selectedItems: {
         type: Array,
-        value: () => [],
+        value() {
+          return [];
+        },
         notify: true,
+        // TODO: Maybe major break. Verify other locations where used.
+        // TODO: remove _setSelectedItems if not used.
+        readOnly: true
       },
       /**
        * The parts object used by the list element
@@ -92,7 +97,7 @@
     deselectItems(items, preventUpdate) {
       if (!items) {
         items = this.selectedItems;
-        this.set('selectedItems', []);
+        this._setSelectedItems([]);
       } else {
         const getNodeId = (i) => i[this.itemIdName];
         const itemsToUpdate = [];
@@ -112,7 +117,7 @@
 
         items = itemsToUpdate;
         if (items.length) {
-          this.set('selectedItems', Object.assign([], this.selectedItems));
+          this._setSelectedItems(Object.assign([], this.selectedItems));
         }
       }
       if (!preventUpdate) this._updateState(items, 'off');
@@ -188,15 +193,20 @@
      *
      * @param {Array.<Object>} items
      * @param {Boolean} [preventUpdate] - blocks the call to _updateState to block template updating
+     * @param {String} [itemIdName = this.itemIdName] - Name of the id field uniquely
+     * identifying nodes.
      */
-    selectItems(items, preventUpdate) {
+    selectItems(items, preventUpdate, itemIdName = this.itemIdName) {
+      if (!Array.isArray(items)) return;
       // Add all of the items to the selectedItems as a set
       const selectedSet = new Set(this.selectedItems);
-      items.forEach((item) => selectedSet.add(item));
+      const itemsToAdd = this.__uniqueItems(items, Array.from(selectedSet));
+      itemsToAdd.forEach((item) => selectedSet.add(item));
 
       // Update selectedItems with an array version if an item was added
-      if (this.selectedItems.length !== selectedSet.size) {
-        this.set('selectedItems', Array.from(selectedSet));
+      // TODO Will this impact optimization?
+      if (Array.isArray(itemsToAdd) && itemsToAdd.length) {
+        this._setSelectedItems(Array.from(selectedSet));
         if (!preventUpdate) this._updateState(items, 'on');
       }
     },
@@ -286,6 +296,21 @@
         });
       });
     },
+    // TODO JSDOC
+    // TODO Cleanup
+    __uniqueItems(items, referenceItems = this.selectedItems, uniqueIdentifier = this.itemIdName) {
+      if (!Array.isArray(items) || !Array.isArray(referenceItems)) return [];
+      // Take the set difference of the two items
+      const uniqueItems = new Set(items.
+        filter((item) => item && item[uniqueIdentifier]).
+        filter((item) => {
+          const alreadyPresent = referenceItems.some((referenceItem) => {
+            return referenceItem[uniqueIdentifier] === item[uniqueIdentifier];
+          });
+          return !alreadyPresent;
+        }));
+      return Array.from(uniqueItems);
+    }
   };
   /**
    * Event for changing the selection status of a tree node
