@@ -22,6 +22,9 @@ Custom property | Description | Default
         display: block;
         padding-top: 8px;
         padding-bottom: 8px;
+        min-height: 250px;
+        display: flex;
+        flex-direction: column;
 
         @apply --hc-nested-list;
       }
@@ -36,6 +39,7 @@ Custom property | Description | Default
         @apply --hc-nested-list-loader;
       }
       #list {
+        flex: 1 1 auto;
         @apply --hc-nested-list-items;
       }
     </style>
