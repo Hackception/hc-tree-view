@@ -16,31 +16,49 @@
       /* Used to allow changing what the tree node's id is */
       itemIdName: {
         type: String,
-        value: 'id'
+        value: 'id',
       },
       /* Used to allow changing what the tree node's parent id is */
       itemParentIdName: {
         type: String,
-        value: 'parentId'
+        value: 'parentId',
       },
       /* The list of items to display in the tree, using a flat structure */
       items: Array,
+      /* The hc-nested-list element to use for rendering */
+      list: {
+        type: Object,
+        notify: true,
+      },
       /* The list of all selected items without duplicates */
       selectedItems: {
         type: Array,
-        value: () => [],
-        notify: true
+        value() {
+          return [];
+        },
+        notify: true,
+        // TODO: Maybe major break. Verify other locations where used.
+        // TODO: remove _setSelectedItems if not used.
+        readOnly: true
       },
       /**
        * The parts object used by the list element
        *
        * @private
        */
-      _parts: Object
+      _parts: Object,
     },
-    listeners: {
-      'item-selected-changed': 'itemSelectedChanged',
-      'item-state-changed': 'itemStateChanged'
+    ready() {
+      this.itemSelectedChanged = this.itemSelectedChanged.bind(this);
+      this.itemStateChanged = this.itemStateChanged.bind(this);
+    },
+    attached() {
+      this.addEventListener('item-selected-changed', this.itemSelectedChanged);
+      this.addEventListener('item-state-changed', this.itemStateChanged);
+    },
+    detached() {
+      this.removeEventListener('item-selected-changed', this.itemSelectedChanged);
+      this.removeEventListener('item-state-changed', this.itemStateChanged);
     },
     /**
      * Collapses the tree while maintaining the current selection states
@@ -70,74 +88,95 @@
         });
     },
     /**
-     * Takes an array of one or more items and removes them from the selectedItems array.
+     * Takes an array of one or more items and removes them from the selectedItems array.  If no items are passed
+     *  then all items will be deslected.
      *
-     * @param {Array.<Object>} [items = this.selectedItems]
+     * @param {Array.<Object>} [items]
      * @param {Boolean} [preventUpdate] - blocks the call to _updateState to block template updating
      */
-    deselectItems(items = this.selectedItems, preventUpdate) {
-      let selectedItems = [];
+    deselectItems(items, preventUpdate) {
+      if (!items) {
+        items = this.selectedItems;
+        this._setSelectedItems([]);
+      } else {
+        const getNodeId = (i) => i[this.itemIdName];
+        const itemsToUpdate = [];
 
-      const getNodeId = (i) => i[this.itemIdName];
+        items.forEach((item) => {
+          const index = this.selectedItems.findIndex((i) => {
+            const match = getNodeId(i) === getNodeId(item);
+            if (match) {
+              itemsToUpdate.push(i);
+            }
+            return match;
+          });
+          if (index >= 0) {
+            this.selectedItems.splice(index, 1);
+          }
+        });
 
-      // Map to Ids for perf
-      selectedItems = this.selectedItems.map(getNodeId);
-      const passedItems = items.map(getNodeId);
-
-      // Filter by Ids for perf
-      selectedItems = selectedItems.filter((i) => passedItems.indexOf(i) === -1);
-
-      // Update selectedItems if there was an item removed
-      if (this.selectedItems.length !== selectedItems.length) {
-        const getItemById = (id) => this.selectedItems.find((i) => getNodeId(i) === id);
-
-        // Re-map ids to items if not empty
-        if (selectedItems.length > 0) selectedItems = selectedItems.map(getItemById);
-
-        this.set('selectedItems', selectedItems);
-        if (!preventUpdate) this._updateState(items, 'off');
+        items = itemsToUpdate;
+        if (items.length) {
+          this._setSelectedItems(Object.assign([], this.selectedItems));
+        }
       }
+      if (!preventUpdate) this._updateState(items, 'off');
     },
     /**
      * Fetches the parent for the given item.
      *
      * @param {Object} item
-     * @returns {Object|undefined}
+     * @return {Object|undefined}
      */
     getParent(item) {
-      return this.$.list.getParent(item);
+      return this.list.getParent(item);
     },
     /**
      * Makes calls to select or deselect the item based on the selected in the event.
      *
      * @listens hc-tree-view-behavior#item-selected-changed
-     * @param {CustomEvent} [event]
-     * @param {Object} detail
+     * @param {CustomEvent} event
      */
-    itemSelectedChanged(event, detail) {
-      this[detail.selected ? 'selectItems' : 'deselectItems']([detail.item], true);
+    itemSelectedChanged({detail}) {
+      if (detail.selected) {
+        this.selectItems([detail.item], true);
+      } else {
+        this.deselectItems([detail.item], true);
+      }
+      if (detail.state !== undefined && Polymer.Element) {
+        this._updateState([detail.item], detail.state)
+      }
     },
     /**
      * Updates the parents and children of this item that it's state was changed, update thiers as well if needed.
      *
      * @listens hc-tree-view-behavior#item-state-changed
      * @param {CustomEvent} event
-     * @param {Object} detail
      */
-    itemStateChanged(event, detail) {
+    itemStateChanged({detail}) {
       const {item, state} = detail;
 
-      // Reject duplicated events
-      if (item.state === state) return;
-      item.state = state;
+      if (item.state !== state) {
+        item.state = state;
+      }
 
       // Change selected status for parents up the chain
       const parent = this._updateParents(item, state);
-      if (parent)
-        this[parent.state === 'on' ? 'selectItems' : 'deselectItems']([parent], true);
+      if (parent) {
+        if (parent.state === 'on') {
+          this.selectItems([parent], true);
+        } else {
+          this.deselectItems([parent], true);
+        }
+      }
 
       // Change selected status for children, even if they are hidden.
-      this[state === 'on' ? 'selectItems' : 'deselectItems'](this._updateChildren(item, state), true);
+      if (state === 'on') {
+        this.selectItems(this._updateChildren(item, state), true);
+      } else {
+        this.deselectItems(this._updateChildren(item, state), true);
+      }
+
       this.debounce('itemStateChanged', () => {
         this.set('_parts', Object.assign({}, this._parts));
       });
@@ -154,15 +193,20 @@
      *
      * @param {Array.<Object>} items
      * @param {Boolean} [preventUpdate] - blocks the call to _updateState to block template updating
+     * @param {String} [itemIdName = this.itemIdName] - Name of the id field uniquely
+     * identifying nodes.
      */
-    selectItems(items, preventUpdate) {
+    selectItems(items, preventUpdate, itemIdName = this.itemIdName) {
+      if (!Array.isArray(items)) return;
       // Add all of the items to the selectedItems as a set
       const selectedSet = new Set(this.selectedItems);
-      items.forEach((item) => selectedSet.add(item));
+      const itemsToAdd = this.__uniqueItems(items, Array.from(selectedSet));
+      itemsToAdd.forEach((item) => selectedSet.add(item));
 
       // Update selectedItems with an array version if an item was added
-      if (this.selectedItems.length !== selectedSet.size) {
-        this.set('selectedItems', Array.from(selectedSet));
+      // TODO Will this impact optimization?
+      if (Array.isArray(itemsToAdd) && itemsToAdd.length) {
+        this._setSelectedItems(Array.from(selectedSet));
         if (!preventUpdate) this._updateState(items, 'on');
       }
     },
@@ -173,7 +217,7 @@
      * @param {Object} item
      * @param {Boolean} state
      * @param {Object} [parts = this._parts]
-     * @returns {Array.<Object>}
+     * @return {Array.<Object>}
      */
     _updateChildren(item, state, parts = this._parts) {
       const children = parts[item[this.itemIdName]];
@@ -232,21 +276,42 @@
     _updateState(items, state, parts = this._parts) {
       if (!items || !parts) return;
       // Filter items to remove children that have a parent in the array
-      items.filter((item) => !items.some((i) => i[this.itemIdName] === item[this.itemParentIdName])).
-        // Pass the filtered items into _updateChildren
-        forEach((item) => {
-          // Find the item in the parts object
-          const parentId = this.$.list._getParentId(item);
-          const partItem = parts[parentId].find((i) => i[this.itemIdName] === item[this.itemIdName]);
-          // Trigger a state change that will propagate
-          this.itemStateChanged(null, {
-            item: partItem,
-            state
-          });
+      items = items.filter((item) => {
+        item.state = state;
+        return !items.some((i) => i[this.itemIdName] === item[this.itemParentIdName]);
+      });
+      // Pass the filtered items into _updateChildren
+      items.forEach((item) => {
+        // Find the item in the parts object
+        const parentId = this.list._getParentId(item);
+        const partItem = parts[parentId].find((i) => {
+          return i[this.itemIdName] === item[this.itemIdName];
         });
+        // Trigger a state change that will propagate
+        this.itemStateChanged({
+          detail: {
+            item: partItem,
+            state,
+          },
+        });
+      });
+    },
+    // TODO JSDOC
+    // TODO Cleanup
+    __uniqueItems(items, referenceItems = this.selectedItems, uniqueIdentifier = this.itemIdName) {
+      if (!Array.isArray(items) || !Array.isArray(referenceItems)) return [];
+      // Take the set difference of the two items
+      const uniqueItems = new Set(items.
+        filter((item) => item && item[uniqueIdentifier]).
+        filter((item) => {
+          const alreadyPresent = referenceItems.some((referenceItem) => {
+            return referenceItem[uniqueIdentifier] === item[uniqueIdentifier];
+          });
+          return !alreadyPresent;
+        }));
+      return Array.from(uniqueItems);
     }
   };
-
   /**
    * Event for changing the selection status of a tree node
    *
@@ -254,13 +319,15 @@
    * @type {Object}
    * @property {Object} item - the item to change selection status for
    * @property {Boolean} selection - the updated selection status
+   * @property {String} [state] - triggers a state update, can be 'on', 'off', or null
    */
   /**
    * Event for changing the state of a tree node
    *
+   * @deprecated
    * @event hc-tree-view-behavior#item-state-changed
    * @type {Object}
    * @property {Object} item - the item to change state for
-   * @property {Boolean} state - the updated state
+   * @property {String} state - the updated state, can be 'on', 'off', or null
    */
 </script>

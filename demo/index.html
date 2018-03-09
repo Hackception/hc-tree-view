@@ -38,39 +38,43 @@
               ></hc-tree-view>
             </template>
             <script>
-              Polymer({
-                is: 'hc-tree-view-demo',
-                properties: {
-                  items: {
-                    type: Array,
-                    // This function is provided as part of test/utils.html, used for testing
-                    value: () => buildItems(10, 10, 10, 10)
+              window.addEventListener('WebComponentsReady', () => {
+                Polymer({
+                  is: 'hc-tree-view-demo',
+                  properties: {
+                    items: {
+                      type: Array,
+                      // This function is provided as part of test/utils.html, used for testing
+                      value() {
+                        return buildItems(5, 5, 5, 5);
+                      }
+                    },
+                    selectedItems: Array
                   },
-                  selectedItems: Array
-                },
-                deselectItems() {
-                  this.$.tree.deselectItems();
-                },
-                reset() {
-                  this.$.tree.reset();
-                },
-                collapse() {
-                  this.$.tree.collapse();
-                },
-                collapseLeafItem() {
-                  const rootItem = this.$.tree._parts.root[0];
-                  const childItem = this.$.tree._parts[rootItem.id][0];
-                  this.$.tree.collapse([childItem]);
-                },
-                selectLeafItem() {
-                  const rootItem = this.$.tree._parts.root[0];
-                  const childItem = this.$.tree._parts[rootItem.id][0];
-                  const leafItem = this.$.tree._parts[childItem.id][0];
-                  this.$.tree.selectItems([leafItem]);
-                },
-                selectRootItem() {
-                  this.$.tree.selectItems([this.$.tree._parts.root[0]]);
-                }
+                  deselectItems() {
+                    this.$.tree.deselectItems();
+                  },
+                  reset() {
+                    this.$.tree.reset();
+                  },
+                  collapse() {
+                    this.$.tree.collapse();
+                  },
+                  collapseLeafItem() {
+                    const rootItem = this.$.tree._parts.root[0];
+                    const childItem = this.$.tree._parts[rootItem.id][0];
+                    this.$.tree.collapse([childItem]);
+                  },
+                  selectLeafItem() {
+                    const rootItem = this.$.tree._parts.root[0];
+                    const childItem = this.$.tree._parts[rootItem.id][0];
+                    const leafItem = this.$.tree._parts[childItem.id][0];
+                    this.$.tree.selectItems([leafItem]);
+                  },
+                  selectRootItem() {
+                    this.$.tree.selectItems([this.$.tree._parts.root[0]]);
+                  }
+                });
               });
             </script>
           </dom-module>

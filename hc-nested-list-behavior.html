@@ -17,17 +17,17 @@
       isLoading: {
         type: Boolean,
         value: false,
-        notify: true
+        notify: true,
       },
       /* The property name for the id on each item. */
       itemIdName: {
         type: String,
-        value: 'id'
+        value: 'id',
       },
       /* The property name for the parentId on each item. */
       itemParentIdName: {
         type: String,
-        value: 'parentId'
+        value: 'parentId',
       },
       /**
        * The flat array of items to build the nested list structure from, requires an id and
@@ -44,7 +44,7 @@
        */
       parts: {
         type: Object,
-        notify: true
+        notify: true,
       },
       /**
        * The currently visible subset of items from the items property
@@ -54,12 +54,25 @@
       _items: {
         type: Array,
         readOnly: true,
-        computed: '_computeItems(parts)'
+        computed: '_computeItems(parts)',
+        observer: '__updateList',
+      },
+    },
+    observers: [
+      '_computeParts(items, itemIdName, itemParentIdName)',
+    ],
+    ready() {
+      this.itemOpenChanged = this.itemOpenChanged.bind(this);
+    },
+    attached() {
+      this.addEventListener('item-open-changed', this.itemOpenChanged);
+      this.$.list._propagateUpdates = (item, instance) => {
+        instance.notifyPath('item.state', item.state);
+        instance.notifyPath('item.open', item.open);
       }
     },
-    observers: ['_computeParts(items, itemIdName, itemParentIdName)'],
-    listeners: {
-      'item-open-changed': 'itemOpenChanged'
+    detached() {
+      this.removeEventListener('item-open-changed', this.itemOpenChanged);
     },
     /**
      * Called when an item's open status is changed.  Update parts with children if lazy-loading then call update
@@ -110,12 +123,14 @@
      * @param {Object} detail
      * @param {String} [idName=this.itemIdName]
      * @param {Object} [parts = this.parts]
+     * @return {Promise}
      */
-    itemOpenChanged(event, detail, idName = this.itemIdName, parts = this.parts) {
+    itemOpenChanged(event, idName = this.itemIdName, parts = this.parts) {
       // Block interactions while loading items
       if (this.isLoading) return;
       this.isLoading = true;
 
+      const detail = event.detail;
       const items = parts[this._getParentId(detail.item)];
       const id = detail.item[idName];
       let item;
@@ -132,7 +147,7 @@
         } else items[i].open = false; // If it's not the item we want, ensure it's closed
       }
 
-      (new Promise((res) => {
+      return (new Promise((res) => {
         if (item) {
           // fetch children and update when done, when there's an item
           const ids = Object.keys(parts);
@@ -147,7 +162,7 @@
             res(parts);
           });
         } else res(parts);
-      })).then(() => {
+      })).then((parts) => {
         this.set('parts', Object.assign({}, parts));
         this.isLoading = false;
       });
@@ -161,7 +176,7 @@
      * @param {Object} parts
      * @param {Object[]} [items=parts.root]
      * @param {String} [idName=this.itemIdName]
-     * @returns {Object[]}
+     * @return {Object[]}
      */
     _computeItems(parts, items = parts.root, idName = this.itemIdName) {
       // Can't calculate items without parts or the name of the id property.
@@ -216,7 +231,7 @@
      * @param {Object} item
      * @param {Object} parts
      * @param {String} [parentId = this._getParentId(item)]
-     * @returns {Number|undefined}
+     * @return {Number|undefined}
      */
     _getItemDepth(item, parts, parentId = this._getParentId(item)) {
       const parent = this.getParent(item, parts);
@@ -241,7 +256,7 @@
      * @protected
      * @param {Object} item
      * @param {String} [parentIdName=this.itemParentIdName]
-     * @returns {String|Number}
+     * @return {String|Number}
      */
     _getParentId(item, parentIdName = this.itemParentIdName) {
       return (item[parentIdName] || item[parentIdName] === 0) ?
@@ -262,9 +277,27 @@
       return Object.assign({
         open: false,
         state: parentState,
-        depth: this._getItemDepth(item, parts, parentId)
+        depth: this._getItemDepth(item, parts, parentId),
       }, item);
-    }
+    },
+    /**
+     * This is a hack to make iron-list hide it's additional physical items since that's not actually part of it's
+     *  functionality.
+     * @private
+     */
+    __updateList() {
+      this.debounce('parts-updating', () => {
+        const list = this.$.list;
+        const lastIndex = this._items.length - 1;
+        (list._physicalItems || []).forEach((item, index) => {
+          if (index > lastIndex) {
+            item.setAttribute('hidden', '');
+          } else {
+            item.removeAttribute('hidden');
+          }
+        });
+      }, 100);
+    },
   };
 
   /**

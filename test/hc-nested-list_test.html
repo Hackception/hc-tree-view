@@ -66,35 +66,35 @@
           it('should return the parent from parts if it exists', () =>
             expect(element.getParent(parts[parts.root[0].id][0])).to.deep.equal(parts.root[0]));
         });
-        describe('itemOpenChanged(event, detail, idName)', () => {
+        describe('itemOpenChanged(event, idName, parts)', () => {
           const event = {};
           let defaultPartSpy, fetchChildrenSpy;
 
           beforeEach(() => {
             event.detail = {
               item: Object.assign({}, parts.root[0]),
-              open: true
+              open: true,
             };
             defaultPartSpy = sinon.spy(element, '__setDefaultPart');
             fetchChildrenSpy = sinon.spy(element, 'fetchChildren');
-            element._computeItems = () => {};
+            element._computeItems = sinon.spy();
           });
 
-          it('should update the open state for the item', (done) => {
+          it('should update the open state for the item', () => {
             element.parts = parts;
-            element.itemOpenChanged(event, event.detail);
-            flush(() => {
-              expect(element.set.calledOnce).to.equal(true);
-              expect(element.set.calledWith('parts')).to.equal(true);
-              expect(element.set.args[0][1].root[0].open).to.equal(event.detail.open);
-              expect(fetchChildrenSpy.calledWithMatch(element.parts.root[0], element.parts)).to.equal(true);
-              done();
-            });
+            return element.itemOpenChanged(event).then(
+              () => {
+                expect(element.set.calledOnce).to.equal(true);
+                expect(element.set.calledWith('parts')).to.equal(true);
+                expect(element.set.args[0][1].root[0].open).to.equal(event.detail.open);
+                expect(fetchChildrenSpy.calledWithMatch(element.parts.root[0], element.parts)).to.equal(true);
+              }
+            );
           });
           it('should set open to false for all other items', (done) => {
             parts.root[1].open = true;
             element.parts = parts;
-            element.itemOpenChanged(event, event.detail);
+            element.itemOpenChanged(event);
             flush(() => {
               expect(element.set.calledOnce).to.equal(true);
               expect(element.set.calledWith('parts')).to.equal(true);
@@ -105,14 +105,19 @@
           });
           it('should not run if isLoading is true', () => {
             element.isLoading = true;
-            element.itemOpenChanged(event, event.detail);
+            element.itemOpenChanged(event);
             expect(fetchChildrenSpy.called).to.equal(false);
           });
           it('should run when the item-open-changed event is fired', (done) => {
-            element.itemOpenChanged = sinon.spy();
-            element.fire('item-open-changed');
+            const spy = sinon.spy(element, 'itemOpenChanged');
+            const parent = element.parentNode;
+            parent.removeChild(element);
+            parent.appendChild(element);
+            element.isLoading = true;
+            const event = new CustomEvent('item-open-changed');
+            element.dispatchEvent(event);
             flush(() => {
-              expect(element.itemOpenChanged.calledOnce).to.equal(true);
+              expect(spy.calledOnce).to.equal(true);
               done();
             });
           });
@@ -128,7 +133,7 @@
               update(parts);
             };
             element.parts = parts;
-            element.itemOpenChanged(event, event.detail);
+            element.itemOpenChanged(event);
             expect(defaultPartSpy.calledWithMatch(bar, parts, 'foo', 'off')).to.equal(true);
           });
           it('should inherit on state from opened item', () => {
@@ -145,7 +150,7 @@
 
             parts.root[0].state = 'on';
             element.parts = parts;
-            element.itemOpenChanged(event, event.detail);
+            element.itemOpenChanged(event);
             expect(defaultPartSpy.calledWithMatch(bar, parts, 'foo', 'on')).to.equal(true);
           });
         });

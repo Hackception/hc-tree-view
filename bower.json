@@ -3,14 +3,35 @@
   "description": "An optimized tree-view based on a flat data structure.",
   "main": "hc-tree-view.html",
   "dependencies": {
-    "polymer": "Polymer/polymer#^1.7.0",
-    "iron-list": "admwx7/iron-list#fix/issue-300",
-    "paper-tristate-checkbox": "Hackception/paper-tristate-checkbox#^0.2.0"
+    "polymer": "Polymer/polymer#^1.9 || ^2.0",
+    "iron-list": "admwx7/iron-list#fix/data-propagation",
+    "paper-tristate-checkbox": "Hackception/paper-tristate-checkbox#^0.3.0"
   },
   "devDependencies": {
-    "iron-component-page": "PolymerElements/iron-component-page#^1.0.0",
-    "iron-demo-helpers": "PolymerElements/iron-demo-helpers#^1.0.0",
-    "web-component-tester": "^4.0.0",
-    "webcomponentsjs": "webcomponents/webcomponentsjs#^0.7.0"
+    "iron-component-page": "PolymerElements/iron-component-page#^1.0 || ^2.0",
+    "iron-demo-helpers": "PolymerElements/iron-demo-helpers#^1.0 || ^2.0",
+    "web-component-tester": "Polymer/web-component-tester#^6.0.0",
+    "webcomponentsjs": "webcomponents/webcomponentsjs#^1.0 || ^2.0"
+  },
+  "variants": {
+    "1.x": {
+      "dependencies": {
+        "polymer": "Polymer/polymer#^1.9",
+        "iron-list": "admwx7/iron-list#fix/issue-300"
+      },
+      "devDependencies": {
+        "iron-component-page": "PolymerElements/iron-component-page#^1.0.0",
+        "iron-demo-helpers": "PolymerElements/iron-demo-helpers#^1.0.0",
+        "web-component-tester": "Polymer/web-component-tester#^4.0.0",
+        "webcomponentsjs": "webcomponents/webcomponentsjs#^0.7.0"
+      },
+      "resolutions": {
+        "iron-list": "fix/issue-300",
+        "webcomponentsjs": "^0.7.0"
+      }
+    }
+  },
+  "resolutions": {
+    "webcomponentsjs": "^1.0.0"
   }
 }
