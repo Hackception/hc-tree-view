@@ -202,7 +202,6 @@
       itemsToAdd.forEach((item) => selectedSet.add(item));
 
       // Update selectedItems with an array version if an item was added
-      // TODO Will this impact optimization?
       if (Array.isArray(itemsToAdd) && itemsToAdd.length) {
         this._setSelectedItems(Array.from(selectedSet));
         if (!preventUpdate) this._updateState(items, 'on');
@@ -294,8 +293,18 @@
         });
       });
     },
-    // TODO JSDOC
-    // TODO Cleanup
+    /**
+     * Return the items that are present in items but not referenceItems. This can
+     * be viewed as set difference applied to arrays.
+     * @private
+     * @param {Object[]} items - Items containing the potentially unique entries.
+     * @param {Object[]} [referenceItems = this.selectedItems] - Reference items
+     * to check against.
+     * @param {String} [uniqueIdentifier = this.itemIdName] - Field uniquely identifying
+     * each item in both sets.
+     * @return {Object[]} - Return the set difference Set(items) - Set(referenceItems) or
+     * an empty array. 
+     */
     __uniqueItems(items, referenceItems = this.selectedItems, uniqueIdentifier = this.itemIdName) {
       if (!Array.isArray(items) || !Array.isArray(referenceItems)) return [];
       // Take the set difference of the two items
