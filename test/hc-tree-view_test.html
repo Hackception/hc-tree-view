@@ -35,6 +35,60 @@
         });
 
         // Public Functions
+        describe('collapse()', () => {
+          beforeEach(() => {
+            sinon.spy(element, 'debounce');
+            element.items = items;
+            Object.keys(parts).forEach((k) => {
+              parts[k].forEach((itemPart) => {
+                itemPart.open = true;
+              });
+            });
+          });
+          it('should collapse all nodes and maintain their state', (done) => {
+            element.collapse(undefined, parts);
+            expect(element.debounce.callCount).to.equal(1);
+            flush(() => {
+              const result = Object.keys(element._parts).some((k) => {
+                return element._parts[k].some((itemPart) => {
+                  return itemPart.open;
+                });
+              });
+              expect(result).to.equal(false);
+              done();
+            });
+          });
+          it('should not collapse any nodes when empty array is passed', (done) => {
+            element.collapse([], parts);
+            expect(element.debounce.callCount).to.equal(0);
+            flush(() => {
+              const result = Object.keys(element._parts).every((k) => {
+                return element._parts[k].every((itemPart) => itemPart.open);
+              });
+              expect(result).to.equal(true);
+              done();
+            });
+          });
+          it('should collapse the passed items and maintain their state', (done) => {
+            const item = items[0];
+            element.collapse([item], parts);
+            expect(element.debounce.callCount).to.equal(1);
+            flush(() => {
+              const itemId = item.id;
+              const parentId = item.parentId;
+              let collapsedResult = (
+                !element._parts[itemId].every((i) => i.open) &&
+                !element._parts[parentId].find((i) => i.id === itemId).open
+              );
+              const untouchedResult = Object.keys(element._parts).some((k) => {
+                return element._parts[k].some((itemPart) => itemPart.open);
+              });
+              expect(collapsedResult).to.equal(true);
+              expect(untouchedResult).to.equal(true);
+              done();
+            });
+          });
+        });
         describe('deselectItems(items)', () => {
           beforeEach(() => element._updateState = sinon.spy());
 
@@ -76,7 +130,7 @@
             expect(element.$.list.getParent.calledWithMatch(item)).to.equal(true);
           });
         });
-        describe('itemSelectedChanged(event, detail)', () => {
+        describe('itemSelectedChanged(event)', () => {
           const item = {id: 'test'};
           beforeEach(() => {
             element.selectItems = sinon.spy();
@@ -84,12 +138,12 @@
           });
 
           it('should call selectItems with the item when detail.selected', () => {
-            element.itemSelectedChanged(null, {item, selected: true});
+            element.itemSelectedChanged({detail: { item, selected: true, }});
             expect(element.selectItems.calledWithMatch([item], true)).to.equal(true);
             expect(element.deselectItems.calledWithMatch([item], true)).to.equal(false);
           });
           it('should call deselectItems with the item when detail.selected', () => {
-            element.itemSelectedChanged(null, {item, selected: false});
+            element.itemSelectedChanged({detail: { item, selected: false, }});
             expect(element.selectItems.calledWithMatch([item], true)).to.equal(false);
             expect(element.deselectItems.calledWithMatch([item], true)).to.equal(true);
           });
@@ -116,34 +170,34 @@
           });
           it('should update item state', () => {
             const state = 'on';
-            element.itemStateChanged(null, {item, state});
+            element.itemStateChanged({ detail: {item, state} });
             expect(item.state).to.equal(state);
           });
           it('should call _updateParents', () => {
             const state = 'on';
-            element.itemStateChanged(null, {item, state});
+            element.itemStateChanged({ detail: {item, state} });
             expect(element._updateParents.calledWithMatch(item, state)).to.equal(true);
           });
           it('should call selectItems when state is changed to "on"', () => {
             const state = 'on';
-            element.itemStateChanged(null, {item, state});
+            element.itemStateChanged({ detail: {item, state} });
             expect(element.selectItems.calledWithMatch([{id: 'test'}], true)).to.equal(true);
           });
           it('should call deselectItems when state is changed to !"on"', () => {
             const state = 'off';
             item.state = 'on';
-            element.itemStateChanged(null, {item, state});
+            element.itemStateChanged({ detail: {item, state} });
             expect(element.deselectItems.calledWithMatch([{id: 'test'}], true)).to.equal(true);
           });
           it('should debounce', () => {
             const state = 'on';
-            element.itemStateChanged(null, {item, state});
+            element.itemStateChanged({ detail: {item, state} });
             expect(element.debounce.calledOnce).to.equal(true);
           })
           it('should set _parts', done => {
             const state = 'on';
             element._parts = parts;
-            element.itemStateChanged(null, {item, state});
+            element.itemStateChanged({ detail: {item, state} });
             flush(() => {
               expect(setSpy.calledWithMatch('_parts', parts)).to.equal(true);
               done();
@@ -163,61 +217,6 @@
             expect(setSpy.calledWithMatch('items', items)).to.equal(true);
           });
         });
-        describe('collapse()', () => {
-          beforeEach(() => {
-            sinon.spy(element, 'debounce');
-            element.items = items;
-            Object.keys(parts).forEach((k) => {
-              parts[k].forEach((itemPart) => {
-                itemPart.open = true;
-              });
-            });
-          });
-          it('should collapse all nodes and maintain their state', (done) => {
-            element.collapse(undefined, parts);
-            expect(element.debounce.callCount).to.equal(1);
-            flush(() => {
-              const result = Object.keys(element._parts).some((k) => {
-                return element._parts[k].some((itemPart) => {
-                  console.log(itemPart)
-                  return itemPart.open;
-                });
-              });
-              expect(result).to.equal(false);
-              done();
-            });
-          });
-          it('should not collapse any nodes when empty array is passed', (done) => {
-            element.collapse([], parts);
-            expect(element.debounce.callCount).to.equal(0);
-            flush(() => {
-              const result = Object.keys(element._parts).every((k) => {
-                return element._parts[k].every((itemPart) => itemPart.open);
-              });
-              expect(result).to.equal(true);
-              done();
-            });
-          });
-          it('should collapse the passed items and maintain their state', (done) => {
-            const item = items[0];
-            element.collapse([item], parts);
-            expect(element.debounce.callCount).to.equal(1);
-            flush(() => {
-              const itemId = item.id;
-              const parentId = item.parentId;
-              let collapsedResult = (
-                !element._parts[itemId].every((i) => i.open) &&
-                !element._parts[parentId].find((i) => i.id === itemId).open
-              );
-              const untouchedResult = Object.keys(element._parts).some((k) => {
-                return element._parts[k].some((itemPart) => itemPart.open);
-              });
-              expect(collapsedResult).to.equal(true);
-              expect(untouchedResult).to.equal(true);
-              done();
-            });
-          });
-        })
         describe('selectItems(items)', () => {
           beforeEach(() => element._updateState = sinon.spy());
 
@@ -335,14 +334,22 @@
             element.$.list.parts = parts;
           });
 
-          it('should call _updateChildren all items that do not have a parent in items', () => {
-            const subItems = [parts.root[0], parts[parts.root[0].id][0], parts[parts.root[1].id][0]];
+          it('should call itemStateChanged on all of the "root" items', () => {
+            const subItems = [
+              parts.root[0],
+              parts[parts.root[0].id][0],
+              parts[parts.root[1].id][0],
+            ];
             element._updateState(subItems, state, parts);
             expect(element.itemStateChanged.callCount).to.equal(2);
-            expect(element.itemStateChanged.calledWithMatch(null, {item: subItems[0], state})).
-              to.equal(true);
-            expect(element.itemStateChanged.calledWithMatch(null, {item: subItems[2], state})).
-              to.equal(true);
+            expect(element.itemStateChanged.calledWithMatch({ detail:  {
+              item: subItems[0],
+              state,
+            }})).to.equal(true);
+            expect(element.itemStateChanged.calledWithMatch({ detail: {
+              item: subItems[2],
+              state,
+            }})).to.equal(true);
           });
           it('should do nothing when items is undefined', () =>
             expect(element._updateState).to.not.throw(TypeError));

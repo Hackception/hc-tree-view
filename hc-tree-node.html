@@ -71,7 +71,8 @@ Custom property | Description | Default
           checked="[[checked]]"
           unchecked="[[unchecked]]"
           indeterminate="[[indeterminate]]"
-          on-state-changed="_stateChanged"
+          on-click="__stopClickEvent"
+          disable-indeterminate
         ></paper-tristate-checkbox>
       </slot>
       <slot name="label">
@@ -87,116 +88,117 @@ Custom property | Description | Default
         /* The value to use when state="on" */
         checked: {
           type: Boolean,
-          value: true
+          value: true,
         },
         /* The icon to use when the item is closed */
         closedIcon: {
           type: String,
-          value: 'icons:chevron-right'
+          value: 'icons:chevron-right',
         },
         /* The value to use when state=null */
         indeterminate: {
           type: Boolean,
-          value: false
+          value: false,
         },
         /* This node's data */
         item: Object,
         /* The icon to use when the item is open */
         openIcon: {
           type: String,
-          value: 'icons:expand-more'
+          value: 'icons:expand-more',
         },
         /* The value to use when state="off" */
         unchecked: {
           type: Boolean,
-          value: false
+          value: false,
         },
         /* Holds the value that determines selected status for the item */
         value: {
           type: Boolean,
-          observer: '_valueChanged'
+          observer: '_valueChanged',
         },
-        /**
-         * Used to determine when this element is in initialization state to prevent extra events
-         *
-         * @private
-         */
-        __init: {
+        __isPolymer1: {
           type: Boolean,
-          value: true
-        }
+          value() {
+            return !Polymer.Element;
+          },
+        },
       },
-      observers: ['_updateDepth(item.depth)'],
-      ready() {
-        /**
-         * Overload the default tap functionality to prevent user clicks from setting indeterminate state,
-         *  and to prevent event bubbling.  This is using an annonymous function to keep the correct scope
-         *  that is provided by the checkbox element instead of an arrow function which will use the local
-         *  scope.
-         *
-         * @protected
-         * @param {Event} event
-         */
-        this.$.checkbox._regularTap = function (event) {
-          event.stopPropagation();
-          this.state = this.state === 'on' ? 'off' : 'on';
-        };
+      observers: [
+        '_updateDepth(item.depth)',
+        '__nodeSelected(item.state)',
+      ],
+      __stopClickEvent(event) {
+        // NOTE: This helper function is needed to avoid expansion upon selection of the
+        // selection box.
+        event.stopPropagation();
       },
       /**
        * Returns the openIcon when open is true, otherwise it returns the closedIcon.
+       * @protected
        *
-       * @private
        * @param {Boolean} open
-       * @returns {String}
+       * @return {String}
        */
       _getIcon(open) {
         return open ? this.openIcon : this.closedIcon;
       },
       /**
-       * Watches for changes to the value for the checkbox then notifies the parent of selection changes.
+       * Updates the depth of this node to display as if it is nested
+       * @protected
        *
-       * @private
-       * @fires hc-tree-view-behavior#item-state-changed
-       * @param {CustomEvent} event
-       * @param {Object} detail
+       * @param {Number} depth
        */
-      _stateChanged(event, detail) {
-        // Prevent firing events if we don't have the necessary data
-        if (!this.item) return;
-
-        // When a change event happens, inform the list
-        this.fire('item-state-changed', {
-          item: this.item,
-          state: detail.value
-        });
-      },
       _updateDepth(depth) {
         this.updateStyles({
-          '--hc-tree-node-depth': String(depth)
+          '--hc-tree-node-depth': String(depth),
         });
       },
       /**
        * Watches for changes to the value for the checkbox then notifies the parent of selection changes.
+       * @protected
        *
-       * @private
        * @fires hc-tree-view-behavior#item-selected-changed
        * @param {Boolean} value
        */
       _valueChanged(value) {
-        // Prevent firing events if we don't have the necessary data
+        // Prevent firing events if we don't have the necessary data or if it's still initializing
         if (!this.item) return;
-        // Prevent the initial event that happens upon loading
-        else if (this.__init) {
-          this.__init = false;
+        if(!this.__isPolymer1 && !this.__initComplete) {
+          this.__initComplete = true;
           return;
         }
 
-        // When a change event happens, inform the list
-        this.fire('item-selected-changed', {
-          item: this.item,
-          selected: value
-        });
-      }
+        this.dispatchEvent(new CustomEvent('item-selected-changed', {
+          detail: {
+            item: this.item,
+            selected: value,
+            state: this.item.state,
+          },
+          bubbles: true,
+          composed: true,
+        }));
+      },
+      /**
+       * Used to trigger interactions with the tree based on the user.
+       * @private
+       * @fires hc-tree-view-behavior#item-state-changed
+       *
+       * @param {ClickEvent} event
+       */
+      __nodeSelected(state) {        
+        if (this.__isPolymer1) {
+          // Resort to the 1.x methods
+          this.dispatchEvent(new CustomEvent('item-state-changed', {
+            detail: {
+              item: this.item,
+              state,
+            },
+            bubbles: true,
+            composed: true,
+          }));
+        }
+      },
     });
   </script>
 </dom-module>

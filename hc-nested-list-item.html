@@ -31,10 +31,16 @@ Custom property | Description | Default
       is: 'hc-nested-list-item',
       properties: {
         /* The item holding all data */
-        item: Object
+        item: Object,
       },
-      listeners: {
-        tap: 'fireOpenEvent'
+      ready() {
+        this.fireOpenEvent = this.fireOpenEvent.bind(this);
+      },
+      attached() {
+        this.addEventListener('click', this.fireOpenEvent);
+      },
+      detached() {
+        this.removeEventListener('click', this.fireOpenEvent);
       },
       /**
        * Fires the toggle event required by hc-nested-list to open/close content sections.
@@ -47,11 +53,16 @@ Custom property | Description | Default
         event.stopPropagation();
 
         // Trigger an event to toggle open state instead.
-        this.fire('item-open-changed', {
-          item: this.item,
-          open: !this.item.open
-        });
-      }
+        this.dispatchEvent(new CustomEvent('item-open-changed', {
+          detail: {
+            item: this.item,
+            open: !this.item.open,
+          },
+          bubbles: true,
+          composed: true,
+          cancelable: true,
+        }));
+      },
     });
   </script>
 </dom-module>
